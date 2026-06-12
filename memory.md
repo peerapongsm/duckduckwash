@@ -8,7 +8,7 @@
 - Goal: replace her Excel-based workflow (orders, billing, customers) which is inefficient. Excel files in repo root are feature reference only — too messy to import.
 - Primary user is the aunt (non-technical, elderly) — UX must be easy for low-tech and elderly users: big buttons, minimal fields, no jargon.
 - **English-only UI.** (Earlier Thai/English toggle idea was scrapped 2026-06-12 — develop in English only.)
-- Branding: single source file `icon/duckduckwash.png` (1233x1293). Derived copies: `src/renderer/src/assets/logo.png` (in-app), `resources/icon.png` (window), `build/icon.png` (installer, square-padded 1293x1293 — regenerate if the logo changes).
+- Branding: single source file `icon/duckduckwash.png` (now alt duck art, 1024x1024 square — swapped from old 488x512 art, commit `e8dc379`; original alt kept at `icon/alt-duckduckwash.png`). Derived copies: `src/renderer/src/assets/logo.png` (in-app), `resources/icon.png` (window), `build/icon.png` (installer; square already, no padding needed).
 
 ## 2. Key Decisions
 - **Deployment: fully local, single Windows PC.** No customer-facing site, no cloud. Ship NSIS installer directly to aunt.
@@ -52,7 +52,8 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - UI redesign (commit `de20fdb`, frontend-design skill): custom daisyUI theme `duckwash` — duck-yellow primary #FFC93C, wash-blue secondary #4FA8D8, cream base #FFFBF2; Fredoka (display) + Nunito (body) bundled offline via @fontsource; left sidebar nav with emoji icons replaced bottom nav; status-colored left-edge order cards (warning/secondary/success/neutral); `rise` stagger animation + `lift` hover classes in main.css.
 - Reports are date-range based (commit `92bbc15`): `rangeReport(db, from, to)` replaced monthlyReport; presets Today / This month / This year + free from/to pickers; buckets daily for spans ≤62 days, monthly beyond (annual readable); IPC `reports:range`.
 - Delivery is editable on Order Details (commit `5b09c5b`): toggle persists via `saveDetails.is_delivery`, total recomputed with/without the 20 fee; complete-status rows also show Edit (customer picks up instead of delivery).
-- **SHIPPED 2026-06-12:** final installer `release/DuckDuckWash Setup 1.0.0.exe` (96.4MB, 15:35, SHA256 02E499CF…) sent to aunt. Current with `main` HEAD (`bb633a2`): duckwash theme, range reports, editable delivery, duck icon everywhere (window/taskbar/exe/shortcuts), desktop + start menu shortcuts. Dev server stopped.
+- **SHIPPED 2026-06-12:** installer `release/DuckDuckWash Setup 1.0.0.exe` (96.4MB, 15:35, SHA256 02E499CF…) sent to aunt — duckwash theme, range reports, editable delivery, desktop + start menu shortcuts.
+- **Icon swapped to alt duck art post-ship** (commit `e8dc379`): installer rebuilt 16:16 (~105MB) with new icon. **Aunt still has the 15:35 build — re-send if she should get the new icon.**
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
