@@ -122,7 +122,8 @@ export function registerIpc(db: Database.Database, dbPath: string, backupDir: st
   ipcMain.handle('reports:monthly', (_e, year: number, month: number) => monthlyReport(db, year, month))
 
   ipcMain.handle('home:today', () => {
-    const today = new Date().toISOString().slice(0, 10)
+    const d = new Date()
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const n = (sql: string) => (db.prepare(sql).get() as { c: number }).c
     return {
       income: (db.prepare("SELECT COALESCE(SUM(total),0) AS s FROM orders WHERE created_at LIKE ? || '%'").get(today) as { s: number }).s,

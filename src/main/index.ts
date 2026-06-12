@@ -56,8 +56,13 @@ app.whenReady().then(() => {
   const userData = app.getPath('userData')
   const dbPath = path.join(userData, 'laundry.db')
   const backupDir = path.join(userData, 'backups')
-  backupDb(dbPath, backupDir) // snapshot previous session's data on every launch
+  try {
+    backupDb(dbPath, backupDir) // snapshot previous session's data on every launch
+  } catch (err) {
+    console.error('startup backup failed:', err)
+  }
   const db = openDb(dbPath)
+  app.on('before-quit', () => db.close())
   registerIpc(db, dbPath, backupDir)
 
   createWindow()
