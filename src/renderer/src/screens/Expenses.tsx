@@ -56,14 +56,24 @@ export default function Expenses(): JSX.Element {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <button className="btn btn-primary btn-lg" onClick={() => setAdding(true)}>+ Expense</button>
+    <div className="rise flex flex-col gap-4">
+      <button className="btn btn-primary btn-lg lift self-start rounded-box font-display shadow-soft" onClick={() => setAdding(true)}>
+        ➕ Expense
+      </button>
+
+      {items.length === 0 && (
+        <div className="rounded-box border-2 border-dashed border-base-300 p-10 text-center opacity-50">
+          No expenses recorded this month
+        </div>
+      )}
 
       {items.map((x) => (
-        <div key={x.id} className="flex items-center gap-3 rounded-box bg-base-200 p-4">
+        <div key={x.id} className="lift flex items-center gap-3 rounded-box bg-base-100 p-4 shadow-soft">
           <div className="flex-1">
-            <div className="text-xl font-bold">{CAT_LABELS[x.category]} · {x.amount.toLocaleString()} ฿</div>
-            <div className="opacity-70">{x.date} {x.description ? `· ${x.description}` : ''}</div>
+            <div className="font-display text-xl font-semibold">
+              {CAT_LABELS[x.category]} · <span className="text-error">฿ {x.amount.toLocaleString()}</span>
+            </div>
+            <div className="opacity-60">{x.date} {x.description ? `· ${x.description}` : ''}</div>
           </div>
           <button className="btn btn-ghost" onClick={() => setConfirmDelete(x.id)}>✕</button>
         </div>

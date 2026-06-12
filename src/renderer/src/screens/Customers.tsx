@@ -46,14 +46,25 @@ export default function Customers(): JSX.Element {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <button className="btn btn-primary btn-lg" onClick={() => setForm(EMPTY)}>+ Regular customer</button>
+    <div className="rise flex flex-col gap-4">
+      <button className="btn btn-primary btn-lg lift self-start rounded-box font-display shadow-soft" onClick={() => setForm(EMPTY)}>
+        ➕ Regular customer
+      </button>
+
+      {customers.length === 0 && (
+        <div className="rounded-box border-2 border-dashed border-base-300 p-10 text-center opacity-50">
+          No regular customers yet — walk-ins stay on their orders
+        </div>
+      )}
 
       {customers.map((c) => (
-        <div key={c.id} className="flex items-center gap-3 rounded-box bg-base-200 p-4">
+        <div key={c.id} className="lift flex items-center gap-3 rounded-box bg-base-100 p-4 shadow-soft">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/20 font-display text-xl font-semibold text-secondary">
+            {c.name.trim().charAt(0).toUpperCase()}
+          </div>
           <div className="flex-1">
-            <div className="text-xl font-bold">{c.name}</div>
-            <div className="opacity-70">{[c.location, c.phone, c.notes].filter(Boolean).join(' · ')}</div>
+            <div className="font-display text-xl font-semibold">{c.name}</div>
+            <div className="opacity-60">{[c.location, c.phone, c.notes].filter(Boolean).join(' · ')}</div>
           </div>
           <button className="btn btn-ghost" onClick={() => setConfirmDelete(c.id)}>✕</button>
         </div>

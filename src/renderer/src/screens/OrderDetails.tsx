@@ -105,14 +105,17 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   if (!order) return <div />
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <div className="text-xl font-bold">
-        {order.customer_name} {order.customer_location ? `· ${order.customer_location}` : ''} · {order.created_at}
+    <div className="rise mx-auto flex max-w-2xl flex-col gap-4">
+      <div className="rounded-box bg-base-200/70 p-4">
+        <div className="font-display text-2xl font-semibold">{order.customer_name}</div>
+        <div className="mt-1 opacity-60">
+          {order.customer_location ? `${order.customer_location} · ` : ''}{order.created_at}
+        </div>
       </div>
 
-      <div className="font-bold">Services</div>
+      <div className="font-display text-xl font-semibold">Services</div>
       {items.map((i) => (
-        <div key={i.id} className="flex items-center gap-2 rounded-box bg-base-200 p-3">
+        <div key={i.id} className="flex items-center gap-2 rounded-box bg-base-100 p-3 shadow-soft">
           <span className="flex-1">{SERVICE_LABELS[i.service_key]}</span>
           <input
             type="number" min="0" step={i.unit === 'kg' ? '0.1' : '1'}
@@ -135,7 +138,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         </div>
       ))}
 
-      <div className="font-bold">Garments (required — what is in this order?)</div>
+      <div className="font-display text-xl font-semibold">Garments <span className="text-base font-normal opacity-60">— what is in this order?</span></div>
       <div className="flex flex-wrap gap-2">
         {garmentButtons.map((g) => (
           <button key={g} className="btn btn-outline" onClick={() => addGarment(g)}>+ {g}</button>
@@ -152,7 +155,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         <button className="btn btn-outline" disabled={!customType.trim()} onClick={addCustomGarment}>+ Add</button>
       </div>
       {garments.map((g, idx) => (
-        <div key={idx} className="flex items-center gap-3 rounded-box bg-base-200 p-3">
+        <div key={idx} className="flex items-center gap-3 rounded-box bg-base-100 p-3 shadow-soft">
           <span className="flex-1">{g.garment}</span>
           <input
             type="number" min="1"
@@ -172,8 +175,9 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         </div>
       ))}
 
-      <div className="text-right text-4xl font-bold">
-        Total: {total.toLocaleString()} ฿ {order.is_delivery ? `(incl. ${fee} delivery)` : ''}
+      <div className="rounded-box border-2 border-primary/50 bg-primary/15 p-4 text-right shadow-soft">
+        <span className="mr-3 align-middle opacity-60">{order.is_delivery ? `incl. ${fee} ฿ delivery · ` : ''}Total</span>
+        <span className="font-display align-middle text-5xl font-semibold">฿ {total.toLocaleString()}</span>
       </div>
       <div className="flex gap-2">
         <button className="btn btn-lg flex-1" onClick={() => go({ name: 'orders' })}>Cancel</button>

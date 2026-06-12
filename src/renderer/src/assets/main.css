@@ -1,5 +1,64 @@
+@import '@fontsource/fredoka/400.css';
+@import '@fontsource/fredoka/500.css';
+@import '@fontsource/fredoka/600.css';
+@import '@fontsource/nunito/400.css';
+@import '@fontsource/nunito/600.css';
+@import '@fontsource/nunito/700.css';
+@import '@fontsource/nunito/800.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html { font-size: 18px; } /* elderly-friendly base size */
+html {
+  font-size: 18px; /* elderly-friendly base size */
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  /* soap-bubble field floating over warm linen */
+  background-color: #fffbf2;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(79, 168, 216, 0.07) 0, rgba(79, 168, 216, 0.07) 56px, transparent 57px),
+    radial-gradient(circle at 78% 10%, rgba(255, 201, 60, 0.1) 0, rgba(255, 201, 60, 0.1) 80px, transparent 81px),
+    radial-gradient(circle at 88% 72%, rgba(79, 168, 216, 0.06) 0, rgba(79, 168, 216, 0.06) 64px, transparent 65px),
+    radial-gradient(circle at 28% 88%, rgba(255, 138, 92, 0.06) 0, rgba(255, 138, 92, 0.06) 48px, transparent 49px);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Fredoka', sans-serif;
+}
+
+/* staggered page-load reveal — applied per screen root */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise > * {
+  animation: rise-in 0.35s ease-out both;
+}
+.rise > *:nth-child(2) { animation-delay: 0.05s; }
+.rise > *:nth-child(3) { animation-delay: 0.1s; }
+.rise > *:nth-child(4) { animation-delay: 0.15s; }
+.rise > *:nth-child(5) { animation-delay: 0.2s; }
+.rise > *:nth-child(n + 6) { animation-delay: 0.25s; }
+
+/* gentle lift on interactive cards/buttons */
+.lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -6px rgba(58, 46, 20, 0.18);
+}
+
+/* chunky friendly scrollbar */
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #f3e5c3;
+  border-radius: 8px;
+  border: 3px solid #fffbf2;
+}
+::-webkit-scrollbar-thumb:hover { background: #e8d3a3; }

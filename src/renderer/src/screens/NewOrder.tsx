@@ -71,7 +71,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+    <div className="rise mx-auto flex max-w-2xl flex-col gap-4">
       <div className="relative">
         <input
           className="input input-bordered input-lg w-full"
@@ -112,27 +112,29 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
         <div className="text-sm opacity-60">Walk-in names are not saved as regular customers</div>
       )}
 
-      <div className="font-bold">Services</div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="font-display text-xl font-semibold">Services</div>
+      <div className="grid grid-cols-2 gap-3">
         {services.map((s) => (
           <button
             key={s.id}
-            className={`btn btn-lg ${selected.includes(s.id) ? 'btn-primary' : 'btn-outline'}`}
+            className={`btn btn-lg lift h-20 rounded-box font-display text-lg font-medium ${
+              selected.includes(s.id) ? 'btn-primary shadow-soft' : 'btn-outline border-2 border-base-300 bg-base-100'
+            }`}
             onClick={() => toggleService(s.id)}
           >
-            {SERVICE_LABELS[s.key]}
+            {selected.includes(s.id) ? '✓ ' : ''}{SERVICE_LABELS[s.key]}
           </button>
         ))}
       </div>
 
-      <label className="label cursor-pointer justify-start gap-2">
+      <label className="label cursor-pointer justify-start gap-3 rounded-box bg-base-200/70 px-4">
         <input
           type="checkbox"
-          className="toggle toggle-lg"
+          className="toggle toggle-secondary toggle-lg"
           checked={delivery}
           onChange={(e) => setDelivery(e.target.checked)}
         />
-        Delivery (+{fee} ฿)
+        <span>🛵 Delivery <b>(+{fee} ฿)</b></span>
       </label>
 
       <div className="flex gap-2">

@@ -26,6 +26,8 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@fontsource/fredoka": "^5.2.10",
+    "@fontsource/nunito": "^5.2.7",
     "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {

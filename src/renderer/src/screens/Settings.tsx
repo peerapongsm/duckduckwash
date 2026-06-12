@@ -36,28 +36,32 @@ export default function Settings(): JSX.Element {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-6">
-      <div>
-        <div className="mb-2 font-bold">Price list (THB)</div>
+    <div className="rise mx-auto flex max-w-xl flex-col gap-6">
+      <div className="rounded-box bg-base-100 p-5 shadow-soft">
+        <div className="mb-3 font-display text-xl font-semibold">💸 Price list (THB)</div>
         {services.filter((s) => s.pricing === 'fixed').map((s) => (
           <label key={s.id} className="mb-2 flex items-center gap-2">
             <span className="flex-1">{SERVICE_LABELS[s.key]}</span>
-            <input type="number" min="0" className="input input-bordered w-32 text-right"
+            <input type="number" min="0" className="input input-bordered w-32 text-right font-display text-lg"
               defaultValue={s.default_price ?? 0}
               onBlur={(e) => savePrice(s.id, Number(e.target.value))} />
-            <span className="w-16 opacity-70">THB/{s.unit}</span>
+            <span className="w-16 opacity-60">THB/{s.unit}</span>
           </label>
         ))}
         <div className="text-sm opacity-60">Iron and Dry clean are priced per order.</div>
       </div>
 
-      <div className="flex gap-2">
-        <button className="btn btn-lg flex-1" onClick={runBackup}>
-          {backedUp ? 'Backup created ✓' : 'Back up now'}
-        </button>
-        <button className="btn btn-lg flex-1" onClick={() => window.api.backup.openFolder()}>
-          Open backup folder
-        </button>
+      <div className="rounded-box bg-base-100 p-5 shadow-soft">
+        <div className="mb-3 font-display text-xl font-semibold">🛟 Backup</div>
+        <div className="flex gap-2">
+          <button className={`btn btn-lg lift flex-1 rounded-box font-display ${backedUp ? 'btn-success' : 'btn-secondary'}`} onClick={runBackup}>
+            {backedUp ? 'Backup created ✓' : 'Back up now'}
+          </button>
+          <button className="btn btn-lg lift flex-1 rounded-box font-display" onClick={() => window.api.backup.openFolder()}>
+            Open backup folder
+          </button>
+        </div>
+        <div className="mt-2 text-sm opacity-60">A backup is also made automatically every time the app starts.</div>
       </div>
     </div>
   )
