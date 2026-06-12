@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 400" width="1400" height="400">
+  <g transform="translate(200,200) scale(0.7) translate(-256,-256)">
+
+  <defs>
+    <clipPath id="drum2">
+      <circle cx="256" cy="256" r="168"/>
+    </clipPath>
+  </defs>
+
+  <!-- Outer washing machine ring (dark green) -->
+  <circle cx="256" cy="256" r="216" fill="#394A25"/>
+  <!-- Inner porthole rim (orange accent ring) -->
+  <circle cx="256" cy="256" r="184" fill="#F09D04"/>
+  <!-- Drum interior (soft cream) -->
+  <circle cx="256" cy="256" r="168" fill="#FFF8E1"/>
+  <!-- bold rim line between cream and orange -->
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#394A25" stroke-width="8"/>
+
+  <!-- Porthole bolts on outer ring -->
+  <g fill="#FDD21B">
+    <circle cx="256" cy="58" r="9"/>
+    <circle cx="256" cy="454" r="9"/>
+    <circle cx="58" cy="256" r="9"/>
+    <circle cx="454" cy="256" r="9"/>
+    <circle cx="116" cy="116" r="9"/>
+    <circle cx="396" cy="116" r="9"/>
+    <circle cx="116" cy="396" r="9"/>
+    <circle cx="396" cy="396" r="9"/>
+  </g>
+
+  <g clip-path="url(#drum2)">
+    <!-- FRONT-FACING DUCK, BOLD OUTLINE STYLE -->
+    <g stroke="#394A25" stroke-width="11" stroke-linejoin="round" stroke-linecap="round">
+      <!-- wings sticking out at sides -->
+      <path d="M178 304 Q 148 296 140 270 Q 170 268 188 288 Q 195 299 188 307 Z" fill="#F09D04"/>
+      <path d="M334 304 Q 364 296 372 270 Q 342 268 324 288 Q 317 299 324 307 Z" fill="#F09D04"/>
+      <!-- body: wide chubby blob below head -->
+      <ellipse cx="256" cy="330" rx="86" ry="62" fill="#FDD21B"/>
+      <!-- head: big round circle -->
+      <circle cx="256" cy="218" r="74" fill="#FDD21B"/>
+      <!-- hair tuft -->
+      <path d="M250 146 Q 246 124 262 118 Q 261 134 272 139 Q 258 142 259 149 Z" fill="#F09D04"/>
+      <!-- beak -->
+      <ellipse cx="256" cy="250" rx="25" ry="15" fill="#F09D04"/>
+    </g>
+    <!-- beak top lighter (no stroke, inside) -->
+    <ellipse cx="256" cy="245" rx="20" ry="8" fill="#FDB515"/>
+    <!-- eyes: simple bold dots with single highlight -->
+    <circle cx="227" cy="210" r="14" fill="#394A25"/>
+    <circle cx="232" cy="205" r="4.5" fill="#FFFFFF"/>
+    <circle cx="285" cy="210" r="14" fill="#394A25"/>
+    <circle cx="290" cy="205" r="4.5" fill="#FFFFFF"/>
+    <!-- blush cheeks -->
+    <ellipse cx="200" cy="240" rx="13" ry="8" fill="#F09D04" opacity="0.5"/>
+    <ellipse cx="312" cy="240" rx="13" ry="8" fill="#F09D04" opacity="0.5"/>
+
+    <!-- Water drawn OVER duck, bold outlined wave -->
+    <path d="M56 348
+             Q 106 326 156 348
+             T 256 348
+             T 356 348
+             T 456 348
+             L 456 448 L 56 448 Z"
+          fill="#7EC8E3" stroke="#394A25" stroke-width="11"/>
+    <path d="M56 380
+             Q 106 364 156 380
+             T 256 380
+             T 356 380
+             T 456 380
+             L 456 448 L 56 448 Z"
+          fill="#5BAFD6"/>
+  </g>
+  <!-- re-draw rim line over water edges -->
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#394A25" stroke-width="8"/>
+
+  <!-- Bubbles above water, bold outline -->
+  <g fill="none" stroke="#394A25" stroke-width="8">
+    <circle cx="142" cy="160" r="13"/>
+    <circle cx="178" cy="124" r="8"/>
+    <circle cx="378" cy="148" r="10"/>
+  </g>
+  <circle cx="348" cy="116" r="6" fill="#7EC8E3"/>
+  <circle cx="124" cy="212" r="5" fill="#7EC8E3"/>
+
+  <!-- Sparkle -->
+  <path d="M398 200 l4.5 13 13 4.5 -13 4.5 -4.5 13 -4.5 -13 -13 -4.5 13 -4.5 Z" fill="#F09D04"/>
+
+  </g>
+  <text x="400" y="232" font-family="Fredoka SemiBold" font-size="118" letter-spacing="-1">
+    <tspan fill="#394A25">Duck</tspan><tspan fill="#F09D04">Duck</tspan><tspan fill="#394A25">Wash</tspan>
+  </text>
+  <text x="406" y="292" font-family="Fredoka SemiBold" font-size="34" letter-spacing="10" fill="#5BAFD6">FRESH &#183; CLEAN &#183; TRACKED</text>
+</svg>
