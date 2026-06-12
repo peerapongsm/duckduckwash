@@ -46,13 +46,13 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - Verification: 10/10 vitest green, `tsc --noEmit` clean (node+web), `npm run build` clean, installer built at `release/DuckDuckWash Setup 1.0.0.exe` (~97MB NSIS, oneClick, `deleteAppDataOnUninstall: false` so DB survives uninstall).
 - Final integration review fixes (commit `0c002e8`): advanceStatus takes `from` status (double-click guard), alert() on mutation errors, `saving` double-submit guards, `updatePrice` rejects <=0, WAL-safe backups via `db.backup()` (openDb before startup backup), saveDetails rejects closed orders / empty garments.
 - **ABI seesaw:** `npm test` needs node ABI (`npm run rebuild:node`); `npm run dev` needs Electron ABI (`npm run rebuild:electron`); `build:win` auto-rebuilds for Electron.
-- Known non-fatal: `build:win` ends with `publish.provider null` warning (no update server — intentional); exe is produced before it.
+- `build:win` now exits 0 cleanly (`publish: null` in electron-builder.yml fixed the old provider crash; `win.icon: build/icon.png` set explicitly).
 - Merged to `main` (fast-forward) 2026-06-12; feature branch deleted; tests re-verified green on main.
 - Post-merge UX round (commit `ef06e97`): THB unit labels in Settings; phone fields validate `^\d{10}$` when non-empty (intake + customers); garment "Other" replaced by free-text input — names persist in `order_garments` and resurface as preset buttons via new `garments:types` IPC (distinct query, no new table).
 - UI redesign (commit `de20fdb`, frontend-design skill): custom daisyUI theme `duckwash` — duck-yellow primary #FFC93C, wash-blue secondary #4FA8D8, cream base #FFFBF2; Fredoka (display) + Nunito (body) bundled offline via @fontsource; left sidebar nav with emoji icons replaced bottom nav; status-colored left-edge order cards (warning/secondary/success/neutral); `rise` stagger animation + `lift` hover classes in main.css.
 - Reports are date-range based (commit `92bbc15`): `rangeReport(db, from, to)` replaced monthlyReport; presets Today / This month / This year + free from/to pickers; buckets daily for spans ≤62 days, monthly beyond (annual readable); IPC `reports:range`.
 - Delivery is editable on Order Details (commit `5b09c5b`): toggle persists via `saveDetails.is_delivery`, total recomputed with/without the 20 fee; complete-status rows also show Edit (customer picks up instead of delivery).
-- Installer NOT rebuilt since `ef06e97` — run `npm run build:win` before shipping to aunt.
+- Installer rebuilt 2026-06-12 15:18 (`release/DuckDuckWash Setup 1.0.0.exe`, 104.8MB) — includes duckwash theme, range reports, editable delivery, new logo. Current with code as of commit `5723976`.
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
