@@ -52,7 +52,7 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - UI redesign (commit `de20fdb`, frontend-design skill): custom daisyUI theme `duckwash` — duck-yellow primary #FFC93C, wash-blue secondary #4FA8D8, cream base #FFFBF2; Fredoka (display) + Nunito (body) bundled offline via @fontsource; left sidebar nav with emoji icons replaced bottom nav; status-colored left-edge order cards (warning/secondary/success/neutral); `rise` stagger animation + `lift` hover classes in main.css.
 - Reports are date-range based (commit `92bbc15`): `rangeReport(db, from, to)` replaced monthlyReport; presets Today / This month / This year + free from/to pickers; buckets daily for spans ≤62 days, monthly beyond (annual readable); IPC `reports:range`.
 - Delivery is editable on Order Details (commit `5b09c5b`): toggle persists via `saveDetails.is_delivery`, total recomputed with/without the 20 fee; complete-status rows also show Edit (customer picks up instead of delivery).
-- Installer rebuilt 2026-06-12 15:18 (`release/DuckDuckWash Setup 1.0.0.exe`, 104.8MB) — includes duckwash theme, range reports, editable delivery, new logo. Current with code as of commit `5723976`.
+- **SHIPPED 2026-06-12:** final installer `release/DuckDuckWash Setup 1.0.0.exe` (96.4MB, 15:35, SHA256 02E499CF…) sent to aunt. Current with `main` HEAD (`bb633a2`): duckwash theme, range reports, editable delivery, duck icon everywhere (window/taskbar/exe/shortcuts), desktop + start menu shortcuts. Dev server stopped.
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
