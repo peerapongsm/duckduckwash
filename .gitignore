@@ -1,0 +1,8 @@
+# Aunt's real financial data — never commit
+*.xlsx
+
+node_modules/
+dist/
+out/
+*.db
+backups/
