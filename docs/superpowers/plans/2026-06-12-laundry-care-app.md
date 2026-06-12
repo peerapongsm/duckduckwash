@@ -143,10 +143,8 @@ export type OrderStatus = 'waiting_input' | 'in_progress' | 'complete' | 'closed
 export type ServiceKey =
   | 'wash_dry_fold'
   | 'wash_dry_fold_iron'
-  | 'iron_only'
+  | 'iron'
   | 'dry_clean'
-  | 'bedding'
-  | 'bedding_iron'
 
 export interface Customer {
   id: number
@@ -273,7 +271,7 @@ import { describe, it, expect } from 'vitest'
 import { openDb } from '../src/main/db'
 
 describe('openDb', () => {
-  it('seeds 6 services with the agreed price model', () => {
+  it('seeds 4 services with the agreed price model', () => {
     const db = openDb(':memory:')
     const services = db
       .prepare('SELECT key, unit, pricing, default_price FROM services ORDER BY id')
@@ -281,10 +279,8 @@ describe('openDb', () => {
     expect(services).toEqual([
       { key: 'wash_dry_fold', unit: 'kg', pricing: 'fixed', default_price: 150 },
       { key: 'wash_dry_fold_iron', unit: 'kg', pricing: 'fixed', default_price: 200 },
-      { key: 'iron_only', unit: 'item', pricing: 'custom', default_price: null },
-      { key: 'dry_clean', unit: 'item', pricing: 'custom', default_price: null },
-      { key: 'bedding', unit: 'kg', pricing: 'fixed', default_price: 150 },
-      { key: 'bedding_iron', unit: 'kg', pricing: 'fixed', default_price: 200 }
+      { key: 'iron', unit: 'item', pricing: 'custom', default_price: null },
+      { key: 'dry_clean', unit: 'item', pricing: 'custom', default_price: null }
     ])
   })
 
@@ -380,10 +376,8 @@ export function openDb(path: string): Database.Database {
     )
     ins.run('wash_dry_fold', 'kg', 'fixed', 150)
     ins.run('wash_dry_fold_iron', 'kg', 'fixed', 200)
-    ins.run('iron_only', 'item', 'custom', null)
+    ins.run('iron', 'item', 'custom', null)
     ins.run('dry_clean', 'item', 'custom', null)
-    ins.run('bedding', 'kg', 'fixed', 150)
-    ins.run('bedding_iron', 'kg', 'fixed', 200)
     db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES ('delivery_fee','20')").run()
   })
   seed()
@@ -869,7 +863,7 @@ declare global { interface Window { api: Api } }
 export {}
 ```
 
-- [ ] **Step 4: Verify** — `npm run dev`, DevTools console: `await window.api.services.list()` → 6 services.
+- [ ] **Step 4: Verify** — `npm run dev`, DevTools console: `await window.api.services.list()` → 4 services.
 
 - [ ] **Step 5: Commit**
 
@@ -1106,10 +1100,8 @@ type Suggestion = Customer & { last_order: string | null }
 const SERVICE_LABELS: Record<string, string> = {
   wash_dry_fold: 'Wash / Dry / Fold',
   wash_dry_fold_iron: 'Wash / Dry / Fold / Iron',
-  iron_only: 'Iron only',
-  dry_clean: 'Dry clean',
-  bedding: 'Bedding',
-  bedding_iron: 'Bedding + Iron'
+  iron: 'Iron',
+  dry_clean: 'Dry clean'
 }
 
 export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Element {
@@ -1326,10 +1318,8 @@ interface ItemRow {
 const SERVICE_LABELS: Record<string, string> = {
   wash_dry_fold: 'Wash / Dry / Fold',
   wash_dry_fold_iron: 'Wash / Dry / Fold / Iron',
-  iron_only: 'Iron only',
-  dry_clean: 'Dry clean',
-  bedding: 'Bedding',
-  bedding_iron: 'Bedding + Iron'
+  iron: 'Iron',
+  dry_clean: 'Dry clean'
 }
 const GARMENT_PRESETS = ['Shirt', 'Pants', 'Dress', 'Skirt', 'Blouse', 'Jacket', 'Other']
 
@@ -1703,10 +1693,8 @@ import type { Service } from '../../../shared/types'
 const SERVICE_LABELS: Record<string, string> = {
   wash_dry_fold: 'Wash / Dry / Fold',
   wash_dry_fold_iron: 'Wash / Dry / Fold / Iron',
-  iron_only: 'Iron only',
-  dry_clean: 'Dry clean',
-  bedding: 'Bedding',
-  bedding_iron: 'Bedding + Iron'
+  iron: 'Iron',
+  dry_clean: 'Dry clean'
 }
 
 export default function Settings(): JSX.Element {
@@ -1734,7 +1722,7 @@ export default function Settings(): JSX.Element {
               onBlur={(e) => savePrice(s.id, Number(e.target.value))} />
           </label>
         ))}
-        <div className="text-sm opacity-60">Iron only and Dry clean are priced per order.</div>
+        <div className="text-sm opacity-60">Iron and Dry clean are priced per order.</div>
       </div>
 
       <div className="flex gap-2">

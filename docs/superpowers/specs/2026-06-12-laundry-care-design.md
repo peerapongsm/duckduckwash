@@ -69,7 +69,7 @@ orders (
 
 services (                      -- editable price list, seeded with defaults
   id INTEGER PRIMARY KEY,
-  key TEXT NOT NULL UNIQUE,    -- wash_dry_fold | wash_dry_fold_iron | iron_only | dry_clean | bedding | bedding_iron
+  key TEXT NOT NULL UNIQUE,    -- wash_dry_fold | wash_dry_fold_iron | iron | dry_clean
   unit TEXT NOT NULL,          -- kg | item
   pricing TEXT NOT NULL,       -- fixed (price = default_price × qty) | custom (price entered per order)
   default_price REAL,          -- NULL for custom-priced services
@@ -111,10 +111,8 @@ settings (key TEXT PRIMARY KEY, value TEXT)   -- delivery_fee = '20', …
 |---|---|---|---|
 | wash_dry_fold | kg | fixed | 150 |
 | wash_dry_fold_iron | kg | fixed | 200 |
-| iron_only | item | custom | — |
+| iron | item | custom | — |
 | dry_clean | item | custom | — |
-| bedding | kg | fixed | 150 |
-| bedding_iron | kg | fixed | 200 |
 
 Delivery: always flat 20 THB (a flag on the order; `delivery_fee` in settings).
 
@@ -125,7 +123,7 @@ Delivery: always flat 20 THB (a flag on the order; `delivery_fee` in settings).
 1. **Home** — logo header + today's summary cards: income today, orders waiting for input, orders in progress, ready for pickup (complete). One big **+ New Order** button.
 2. **New Order (drop-off, phase 1)** — deliberately tiny form:
    - Customer: type name → autocomplete suggests **saved regulars only** (showing name + location + phone + last-order date to disambiguate duplicates). Free-typed walk-in names stay inline on the order; optional location and phone fields.
-   - Big toggle buttons for the 6 service types (multi-select) + delivery toggle (+20).
+   - Big toggle buttons for the 4 service categories (multi-select) + delivery toggle (+20).
    - Save → order created in `waiting_input`, back to Home. No quantities, no prices at this stage.
 3. **Orders** — status tabs **Waiting input / In progress / Complete / Closed**. Every row: customer name + location + created datetime + total (or "—" before input). Row actions by status:
    - waiting_input → big **Add details** button (opens Order Details)
@@ -133,7 +131,7 @@ Delivery: always flat 20 THB (a flag on the order; `delivery_fee` in settings).
    - complete → **Close (paid & picked up)** behind a confirm
    - closed → read-only
    - Delete (✕) always behind a confirm dialog.
-4. **Order Details (phase 2 edit)** — for each chosen service: quantity input (kg or items) and, for custom-priced services (iron only, dry clean), a price-per-item input. Garment checklist: preset garment buttons (shirt, pants, dress, skirt, blouse, jacket, other) each with quantity stepper and two checkboxes — **needs ironing**, **special care**. Live total at the bottom. Save recomputes total and moves `waiting_input → in_progress` (editing later keeps the current status).
+4. **Order Details (phase 2 edit)** — for each chosen service: kg input for per-kg services; quantity + custom price input for iron and dry clean. Garment checklist: preset garment buttons (shirt, pants, dress, skirt, blouse, jacket, other) each with quantity stepper and two checkboxes — **needs ironing**, **special care**. Live total at the bottom. Save recomputes total and moves `waiting_input → in_progress` (editing later keeps the current status).
 5. **Customers** — saved regulars CRUD; the only place customers are created. Deleting a regular keeps past orders (inline name).
 6. **Expenses** — list + big **+ Expense**: date (default today), 4 big category buttons, amount, optional note.
 7. **Reports** — month picker → cards: revenue / expenses / profit + daily revenue bar chart. (Hidden from the future assistant role.)

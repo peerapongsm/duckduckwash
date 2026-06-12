@@ -25,16 +25,16 @@
 4. **Order status flow: `waiting_input` → `in_progress` → `complete` → `closed`.** New order starts at waiting_input; after detail input → in_progress; finished washing → complete; customer picked up AND paid → closed.
 - Garment checklist is informational (anti-forget/anti-dispute); price comes from services, not garments.
 
-### Price model (revised 2026-06-12)
+### Price model (final 2026-06-12 — exactly 4 service categories, bedding dropped)
 | service | unit | price |
 |---|---|---|
 | wash/dry/fold | kg | 150 |
 | wash/dry/fold/iron | kg | 200 |
-| iron only | item | custom per item |
-| dry clean | item | custom per item |
-| bedding | kg | 150 |
-| bedding + iron | kg | 200 |
+| iron | item | custom |
+| dry clean | item | custom |
 | delivery | flat | always 20 |
+
+At order creation aunt only picks categories; later she fills in kg (per-kg services) or the custom price (iron, dry clean).
 
 - **Walk-ins are never added to the customers table.** Orders store `customer_name`/`customer_location` inline; nullable `customer_id` only when a saved regular is picked. Regulars created deliberately on Customers screen only (most walk-ins are foreign travelers).
 - **Customer names are not unique** (3 Peters OK). Disambiguate in UI via location/phone/last-order date.
