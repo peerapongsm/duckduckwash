@@ -13,10 +13,12 @@ files:
 asarUnpack:
   - 'resources/**'
   - '**/node_modules/better-sqlite3/**'
+# local-only app, no update server — disables update-info tasks that crash without a provider
+publish: null
 win:
   target:
     - nsis
-  # icon resolved from buildResources: build/icon.png (square-padded from icon/duckduckwash.png)
+  icon: build/icon.png # square-padded from icon/duckduckwash.png
 nsis:
   oneClick: true
   perMachine: false
