@@ -80,6 +80,7 @@ export interface GarmentInput {
 
 export interface OrderDetailsInput {
   order_id: number
+  is_delivery: boolean
   items: ItemDetailInput[]
   garments: GarmentInput[]
 }

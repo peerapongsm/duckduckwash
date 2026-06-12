@@ -97,9 +97,12 @@ export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element
             </>
           )}
           {o.status === 'complete' && (
-            <button className="btn btn-success btn-lg" disabled={busy} onClick={() => setConfirm({ kind: 'close', id: o.id, from: 'complete' })}>
-              Close (paid & picked up)
-            </button>
+            <>
+              <button className="btn btn-lg" disabled={busy} onClick={() => go({ name: 'orderDetails', orderId: o.id })}>Edit</button>
+              <button className="btn btn-success btn-lg" disabled={busy} onClick={() => setConfirm({ kind: 'close', id: o.id, from: 'complete' })}>
+                Close (paid & picked up)
+              </button>
+            </>
           )}
           {o.status !== 'closed' && (
             <button className="btn btn-ghost" disabled={busy} onClick={() => setConfirm({ kind: 'delete', id: o.id, from: o.status })}>✕</button>

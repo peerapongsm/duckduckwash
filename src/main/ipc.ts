@@ -55,7 +55,7 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
     const fee = Number((db.prepare("SELECT value FROM settings WHERE key='delivery_fee'").get() as { value: string }).value)
     const total = computeOrderTotal(
       input.items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price })),
-      order.is_delivery === 1,
+      input.is_delivery,
       fee
     )
     const tx = db.transaction(() => {
@@ -70,7 +70,8 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
         insG.run(input.order_id, g.garment, g.quantity, g.special_care ? 1 : 0)
 
       const newStatus = order.status === 'waiting_input' ? 'in_progress' : order.status
-      db.prepare('UPDATE orders SET total=?, status=? WHERE id=?').run(total, newStatus, input.order_id)
+      db.prepare('UPDATE orders SET total=?, status=?, is_delivery=? WHERE id=?')
+        .run(total, newStatus, input.is_delivery ? 1 : 0, input.order_id)
     })
     tx()
     return total

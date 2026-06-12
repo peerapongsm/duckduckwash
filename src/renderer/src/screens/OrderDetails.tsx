@@ -31,6 +31,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [saving, setSaving] = useState(false)
   const [knownTypes, setKnownTypes] = useState<string[]>([])
   const [customType, setCustomType] = useState('')
+  const [delivery, setDelivery] = useState(false)
 
   useEffect(() => {
     window.api.garments.types().then((t) => setKnownTypes(t as string[]))
@@ -40,6 +41,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
     window.api.orders.get(orderId).then((res) => {
       const r = res as { order: Order; items: ItemRow[]; garments: OrderGarment[] }
       setOrder(r.order)
+      setDelivery(r.order.is_delivery === 1)
       setItems(r.items.map((i) => ({ ...i, unit_price: i.unit_price ?? i.default_price })))
       setGarments(r.garments.map((g) => ({
         garment: g.garment, quantity: g.quantity, special_care: g.special_care === 1
@@ -50,8 +52,8 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
 
   const total = useMemo(() => {
     const sum = items.reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0)
-    return sum + (order?.is_delivery ? fee : 0)
-  }, [items, order, fee])
+    return sum + (delivery ? fee : 0)
+  }, [items, delivery, fee])
 
   const valid =
     items.every((i) => (i.quantity ?? 0) > 0 && (i.unit_price ?? 0) > 0) &&
@@ -91,6 +93,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
     try {
       await window.api.orders.saveDetails({
         order_id: orderId,
+        is_delivery: delivery,
         items: items.map((i) => ({ item_id: i.id, quantity: i.quantity!, unit_price: i.unit_price! })),
         garments
       })
@@ -175,8 +178,18 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         </div>
       ))}
 
+      <label className="label cursor-pointer justify-start gap-3 rounded-box bg-base-200/70 px-4">
+        <input
+          type="checkbox"
+          className="toggle toggle-secondary toggle-lg"
+          checked={delivery}
+          onChange={(e) => setDelivery(e.target.checked)}
+        />
+        <span>🛵 Delivery <b>(+{fee} ฿)</b> — turn off if the customer picks up instead</span>
+      </label>
+
       <div className="rounded-box border-2 border-primary/50 bg-primary/15 p-4 text-right shadow-soft">
-        <span className="mr-3 align-middle opacity-60">{order.is_delivery ? `incl. ${fee} ฿ delivery · ` : ''}Total</span>
+        <span className="mr-3 align-middle opacity-60">{delivery ? `incl. ${fee} ฿ delivery · ` : ''}Total</span>
         <span className="font-display align-middle text-5xl font-semibold">฿ {total.toLocaleString()}</span>
       </div>
       <div className="flex gap-2">
