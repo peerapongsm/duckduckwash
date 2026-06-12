@@ -1,7 +1,11 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
+import path from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { openDb } from './db'
+import { registerIpc } from './ipc'
+import { backupDb } from './backup'
 
 function createWindow(): void {
   // Create the browser window.
@@ -49,8 +53,12 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  const userData = app.getPath('userData')
+  const dbPath = path.join(userData, 'laundry.db')
+  const backupDir = path.join(userData, 'backups')
+  backupDb(dbPath, backupDir) // snapshot previous session's data on every launch
+  const db = openDb(dbPath)
+  registerIpc(db, dbPath, backupDir)
 
   createWindow()
 
