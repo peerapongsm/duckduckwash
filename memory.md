@@ -8,7 +8,7 @@
 - Goal: replace her Excel-based workflow (orders, billing, customers) which is inefficient. Excel files in repo root are feature reference only — too messy to import.
 - Primary user is the aunt (non-technical, elderly) — UX must be easy for low-tech and elderly users: big buttons, minimal fields, no jargon.
 - **English-only UI.** (Earlier Thai/English toggle idea was scrapped 2026-06-12 — develop in English only.)
-- Branding assets in `./icon/`: `duckduckwash-logo.png(@2x)/.svg`, `duckduckwash-icon-{32,64,128,256,512}.png/.svg`. Resize freely to fit.
+- Branding: single source file `icon/duckduckwash.png` (1233x1293). Derived copies: `src/renderer/src/assets/logo.png` (in-app), `resources/icon.png` (window), `build/icon.png` (installer, square-padded 1293x1293 — regenerate if the logo changes).
 
 ## 2. Key Decisions
 - **Deployment: fully local, single Windows PC.** No customer-facing site, no cloud. Ship NSIS installer directly to aunt.
