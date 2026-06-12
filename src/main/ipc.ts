@@ -2,7 +2,7 @@ import { ipcMain, shell } from 'electron'
 import type Database from 'better-sqlite3'
 import { computeOrderTotal } from './logic/pricing'
 import { nextStatus } from './logic/status'
-import { monthlyReport } from './logic/reports'
+import { rangeReport } from './logic/reports'
 import { backupDb } from './backup'
 import type { OrderIntake, OrderDetailsInput, OrderStatus } from '../shared/types'
 
@@ -129,7 +129,7 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
   ipcMain.handle('settings:get', (_e, key: string) =>
     (db.prepare('SELECT value FROM settings WHERE key=?').get(key) as { value: string } | undefined)?.value ?? null)
 
-  ipcMain.handle('reports:monthly', (_e, year: number, month: number) => monthlyReport(db, year, month))
+  ipcMain.handle('reports:range', (_e, from: string, to: string) => rangeReport(db, from, to))
 
   ipcMain.handle('home:today', () => {
     const d = new Date()

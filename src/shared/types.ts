@@ -84,11 +84,12 @@ export interface OrderDetailsInput {
   garments: GarmentInput[]
 }
 
-export interface MonthlyReport {
+export interface RangeReport {
   revenue: number
   expenses: number
   profit: number
-  daily: { day: number; revenue: number }[]
+  granularity: 'day' | 'month'
+  buckets: { label: string; revenue: number }[]
 }
 
 export interface Expense {

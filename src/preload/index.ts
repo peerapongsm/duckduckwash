@@ -28,7 +28,7 @@ const api = {
     updatePrice: (p: unknown) => invoke('services:updatePrice', p)
   },
   settings: { get: (key: string) => invoke('settings:get', key) },
-  reports: { monthly: (y: number, m: number) => invoke('reports:monthly', y, m) },
+  reports: { range: (from: string, to: string) => invoke('reports:range', from, to) },
   home: { today: () => invoke('home:today') },
   backup: { run: () => invoke('backup:run'), openFolder: () => invoke('backup:openFolder') }
 }
