@@ -1,5 +1,5 @@
 # DuckDuckWash — Memory Log
-**Date:** 2026-06-12 | **Last updated:** 2026-06-12 (Tasks 8+9 done)
+**Date:** 2026-06-12 | **Last updated:** 2026-06-12 (final-review fixes — commit 0c002e8)
 
 ---
 
@@ -42,6 +42,39 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - Roles: now owner-only, no login. Future: admin + 1 shared assistant account (Reports hidden), PIN gate, no full user management.
 
 ## 3. Current State
+- **Final-review fixes — DONE** (commit `0c002e8` on `feat/duckduckwash-app`):
+  - Fix 1: `orders:advanceStatus` now takes `from: OrderStatus` parameter; no-ops if current status != from (prevents double-click race). Preload updated. Orders.tsx passes `'in_progress'` for "Mark complete", `'complete'` for "Close order".
+  - Fix 2: All mutation calls (save/create/remove/advance/saveDetails/updatePrice/backup.run) wrapped in try/catch with `alert('Something went wrong: ...')` in NewOrder, Orders, OrderDetails, Customers, Expenses, Settings.
+  - Fix 3: `saving` state added to NewOrder, OrderDetails, Customers, Expenses. Save/Create/Delete buttons disabled when saving.
+  - Fix 4: `services:updatePrice` throws if price not finite or <= 0. Settings.tsx skips call client-side when price <= 0.
+  - Fix 5: `backup.ts` rewritten to use `db.backup(dest)` (better-sqlite3 online backup, WAL-safe). `registerIpc` no longer takes `dbPath`. `index.ts` reordered: openDb first, then async backupDb, then registerIpc.
+  - Fix 6: `orders:saveDetails` throws if order is closed, garments empty, or any garment qty < 1.
+  - Verification: 10/10 tests, both tsc --noEmit clean, `npm run build` clean, `npm run build:win` → `release/DuckDuckWash Setup 1.0.0.exe` (97.3 MB) regenerated. Pre-existing publish.provider null warning unchanged (non-fatal).
+- **Task 14: NSIS Windows installer — DONE** (commit `233851c` on `feat/duckduckwash-app`):
+  - `electron-builder.yml`: productName=DuckDuckWash, output=release, win target=nsis, icon=icon/duckduckwash-icon-256.png, nsis oneClick=true/perMachine=false/deleteAppDataOnUninstall=false (DB protection), mac/linux sections removed
+  - `package.json`: `build:win` uses `electron-vite build && electron-builder --win`
+  - `.gitignore`: added `release/`
+  - Built: `release/DuckDuckWash Setup 1.0.0.exe` (92.8 MB); better-sqlite3 rebuilt for Electron ABI during packaging; asarUnpack applied
+  - Non-fatal warning: publish.provider null (no update server configured — expected, no auto-update needed)
+  - **ALL 14 TASKS COMPLETE. App is ready to ship.**
+- **Tasks 12+13: Customers, Expenses, Reports, Settings screens — DONE** (commits `aab87b0`, `04cdb8f` on `feat/duckduckwash-app`):
+  - `Customers.tsx`: list regulars, add (4 fields: name/location/phone/notes), confirm-delete (keeps past orders)
+  - `Expenses.tsx`: list current-month expenses, add (date/category toggle/amount/note), confirm-delete; categories: supplies/utilities/rent/other; uses local date (not UTC)
+  - `Reports.tsx`: month picker, 3-card summary (revenue/expenses/profit with color), 31-day daily bar chart from `reports.monthly(y, m)`
+  - `Settings.tsx`: editable price list for `pricing='fixed'` services only (onBlur save), Back up now + Open backup folder buttons with 3s feedback
+  - `tsc --noEmit -p tsconfig.web.json` clean; 10/10 tests pass; full `npm run build` clean
+- **Task 11: Orders board + Order Details screens — DONE** (commit `db36092` on `feat/duckduckwash-app`):
+  - Replaced placeholder `src/renderer/src/screens/Orders.tsx`: tabbed board (4 statuses), per-row action buttons (Add details / Edit+Mark complete / Close), delete always behind confirm, close (complete→closed) behind confirm dialog with exact wording
+  - Replaced placeholder `src/renderer/src/screens/OrderDetails.tsx`: service item rows (qty + unit_price readonly for fixed, editable for custom), garment preset buttons + per-row qty/special_care/remove, running total with delivery fee, Save disabled until all items have qty>0 && price>0 AND ≥1 garment row
+  - `tsc --noEmit -p tsconfig.web.json` clean; 10/10 tests pass; full `npm run build` clean
+- **Task 10: New Order (drop-off intake) screen — DONE** (commit `b4288d5` on `feat/duckduckwash-app`):
+  - Replaced placeholder `src/renderer/src/screens/NewOrder.tsx` with full intake form
+  - Customer name autocomplete (saved regulars only via `customers.search`); picking fills name/location/phone, sets `customerId`; free-typed names keep `customerId = null` (walk-in, never persisted)
+  - Service buttons: multi-select toggles, loads from `services.list()`, labels from `SERVICE_LABELS` map
+  - Delivery checkbox with fee from `settings.get('delivery_fee')` (default 20)
+  - Save enabled only when name non-empty AND ≥1 service selected; calls `orders.intake` then navigates home
+  - All preload calls return `Promise<unknown>` — casts (`as Service[]`, `as Suggestion[]`, `as string | null`) applied
+  - `tsc --noEmit -p tsconfig.web.json` clean; full `npm run build` clean; 10/10 tests pass
 - **Task 9: Home screen — DONE** (commit `eecba42` on `feat/duckduckwash-app`):
   - Created `src/renderer/src/screens/Home.tsx`: 4-stat grid (income/waiting/in-progress/ready) from `window.api.home.today()` + large "New Order" button; casts result to TodayStats
 - **Task 8: App shell + branding — DONE** (commit `910e420` on `feat/duckduckwash-app`):
