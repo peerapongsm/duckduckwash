@@ -23,7 +23,7 @@
 2. Aunt creates order at drop-off with just: customer name/contact + which service types they want. Customer leaves.
 3. Later she edits the order: kg, garment checklist (shirt, dress, skirt, blouse, …), per-garment flags `needs_ironing` and `special_care` (deliberate simplification: a special-care boolean instead of fabric types).
 4. **Order status flow: `waiting_input` → `in_progress` → `complete` → `closed`.** New order starts at waiting_input; after detail input → in_progress; finished washing → complete; customer picked up AND paid → closed.
-- Garment checklist is informational (anti-forget/anti-dispute); price comes from services, not garments.
+- Garment checklist is informational (anti-forget/anti-dispute); price comes from services, not garments. **But it is required at detail input** — aunt must specify how many shirts/dresses/blouses etc. the order contains (≥1 garment row) before details can be saved.
 
 ### Price model (final 2026-06-12 — exactly 4 service categories, bedding dropped)
 | service | unit | price |

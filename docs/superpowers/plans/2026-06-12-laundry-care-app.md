@@ -1348,7 +1348,10 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
     return sum + (order?.is_delivery ? fee : 0)
   }, [items, order, fee])
 
-  const valid = items.every((i) => (i.quantity ?? 0) > 0 && (i.unit_price ?? 0) > 0)
+  const valid =
+    items.every((i) => (i.quantity ?? 0) > 0 && (i.unit_price ?? 0) > 0) &&
+    garments.length > 0 &&
+    garments.every((g) => g.quantity >= 1)
 
   function updItem(id: number, patch: Partial<ItemRow>): void {
     setItems(items.map((i) => (i.id === id ? { ...i, ...patch } : i)))
@@ -1395,7 +1398,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         </div>
       ))}
 
-      <div className="font-bold">Garments (checklist)</div>
+      <div className="font-bold">Garments (required — what is in this order?)</div>
       <div className="flex flex-wrap gap-2">
         {GARMENT_PRESETS.map((g) => (
           <button key={g} className="btn btn-outline" onClick={() => addGarment(g)}>+ {g}</button>
@@ -1432,7 +1435,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
 }
 ```
 
-- [ ] **Step 3: Verify manually** — order from Task 10: "Add details" → fill kg, add garments with flags → Save → order appears under In progress with total; Mark complete → Ready for pickup; Close (confirm) → Closed tab, read-only.
+- [ ] **Step 3: Verify manually** — order from Task 10: "Add details" → fill kg; Save stays disabled until at least one garment row is added (counts ≥1) → add garments with flags → Save → order appears under In progress with total; Mark complete → Ready for pickup; Close (confirm) → Closed tab, read-only.
 
 - [ ] **Step 4: Commit**
 

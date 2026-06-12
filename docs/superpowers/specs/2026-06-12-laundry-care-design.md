@@ -16,7 +16,7 @@
 
 1. Customer walks in and drops off a load.
 2. Owner creates the order at drop-off with only: customer name (+optional location/contact) and which **service types** the customer wants. Customer leaves. Order starts in **`waiting_input`**.
-3. Later, owner opens the order and fills in the details: weight in kg per service, custom prices for per-item services, and a **garment checklist** — garment type (shirt, dress, skirt, blouse, …), quantity, and per-garment flags `needs_ironing` and `special_care` (a deliberate boolean instead of fabric types). Saving details moves the order to **`in_progress`**.
+3. Later, owner opens the order and fills in the details: weight in kg per service, custom prices for per-item services, and a **garment checklist** — garment type (shirt, dress, skirt, blouse, …) with a count per type, plus per-garment flags `needs_ironing` and `special_care` (a deliberate boolean instead of fabric types). The garment counts are a required part of detail input — at least one garment row must be entered before details can be saved. Saving details moves the order to **`in_progress`**.
 4. When the laundry is done, owner marks it **`complete`** (waiting for pickup).
 5. Customer returns, pays (cash only), takes the laundry → owner marks it **`closed`**. Closed implies paid; there is no separate paid flag.
 
@@ -145,7 +145,7 @@ Delivery: always flat 20 THB (a flag on the order; `delivery_fee` in settings).
 ## 7. Error Handling
 
 - All multi-row writes in transactions; WAL mode — power cut cannot corrupt data.
-- Validation: quantities and prices ≥ 0 (custom prices > 0 to save details), at least one service per order, non-empty customer name; Save disabled until valid.
+- Validation: quantities and prices ≥ 0 (custom prices > 0 to save details), at least one service per order, at least one garment row (with count ≥ 1) to save details, non-empty customer name; Save disabled until valid.
 - Status can only move forward along waiting_input → in_progress → complete → closed (no skips via UI).
 - Deleting an order or customer always confirms first. Deleting a regular keeps their past orders intact.
 
