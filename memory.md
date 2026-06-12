@@ -47,7 +47,7 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - Final integration review fixes (commit `0c002e8`): advanceStatus takes `from` status (double-click guard), alert() on mutation errors, `saving` double-submit guards, `updatePrice` rejects <=0, WAL-safe backups via `db.backup()` (openDb before startup backup), saveDetails rejects closed orders / empty garments.
 - **ABI seesaw:** `npm test` needs node ABI (`npm run rebuild:node`); `npm run dev` needs Electron ABI (`npm run rebuild:electron`); `build:win` auto-rebuilds for Electron.
 - Known non-fatal: `build:win` ends with `publish.provider null` warning (no update server — intentional); exe is produced before it.
-- Branch `feat/duckduckwash-app` not yet merged to `main` — awaiting user decision.
+- Merged to `main` (fast-forward) 2026-06-12; feature branch deleted; tests re-verified green on main.
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
