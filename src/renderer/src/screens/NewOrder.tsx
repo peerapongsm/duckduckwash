@@ -38,7 +38,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
   const valid = name.trim() !== '' && selected.length > 0
 
   function toggleService(id: number): void {
-    setSelected(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id])
+    setSelected(selected.includes(id) ? [] : [id])
   }
   function pick(c: Suggestion): void {
     setCustomerId(c.id)

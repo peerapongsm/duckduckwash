@@ -36,6 +36,7 @@
 - **Delivery is free (changed post-v1.0.0, commit `4704cf8`)** — `is_delivery` is an informational tag only; no fee in totals, `delivery_fee` setting no longer seeded/used. Old closed orders keep their +20 totals (historical).
 
 At order creation aunt only picks categories; later she fills in kg (per-kg services) or the custom price (iron, dry clean).
+- **Service category is single-select (2026-06-12, post-v1.0.1):** one category per order; clicking another replaces selection, clicking selected deselects. IPC still takes `service_ids` array (now length 1) — no backend change.
 
 - **Walk-ins are never added to the customers table.** Orders store `customer_name`/`customer_location` inline; nullable `customer_id` only when a saved regular is picked. Regulars created deliberately on Customers screen only (most walk-ins are foreign travelers).
 - **Customer names are not unique** (3 Peters OK). Disambiguate in UI via location/phone/last-order date.
@@ -57,6 +58,7 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - **Icon swapped to alt duck art post-ship** (commit `e8dc379`): installer rebuilt 16:16 (~105MB) with new icon.
 - **Feedback round 1 (commit `4704cf8`):** phone → contact everywhere (free text, maxLength 256, 10-digit validation dropped; DB columns renamed `customers.contact` / `orders.customer_contact` with auto ALTER TABLE migration for v1.0.0 DBs — migration covered by test); expense categories now supplies/utilities/rent/food/salary/other; expense modal does batch entry (rows + shared date, `expenses:createMany` transaction, replaced `expenses:create`); delivery free (see price model). 12/12 tests + typecheck green.
 - **v1.0.1 installer ready to send** (16:42, 100.6MB, SHA256 C71DDA62…) at `release/DuckDuckWash Setup 1.0.1.exe` — new duck icon + all round-1 changes; version bumped commit `11c80f2`. Stale `Setup 1.0.0.exe` builds still in `release/` (gitignored). Dev server stopped.
+- **Uncommitted (post-v1.0.1):** NewOrder service buttons single-select; OrderDetails garment preset/custom add increments existing row on case-insensitive name match instead of spawning duplicate. Typecheck green; not in v1.0.1 installer — needs rebuild before next ship.
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.

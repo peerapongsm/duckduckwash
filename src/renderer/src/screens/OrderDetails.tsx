@@ -74,7 +74,12 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   }, [knownTypes])
 
   function addGarment(g: string): void {
-    setGarments([...garments, { garment: g, quantity: 1, special_care: false }])
+    const idx = garments.findIndex((r) => r.garment.toLowerCase() === g.toLowerCase())
+    if (idx >= 0) {
+      setGarments(garments.map((r, i) => (i === idx ? { ...r, quantity: r.quantity + 1 } : r)))
+    } else {
+      setGarments([...garments, { garment: g, quantity: 1, special_care: false }])
+    }
   }
   function addCustomGarment(): void {
     const g = customType.trim()
