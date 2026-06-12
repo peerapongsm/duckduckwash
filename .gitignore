@@ -1,5 +1,6 @@
 # Aunt's real financial data — never commit
 *.xlsx
+.~lock.*#
 
 node_modules/
 dist/
