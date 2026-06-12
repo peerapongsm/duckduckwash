@@ -1,5 +1,5 @@
 # DuckDuckWash — Memory Log
-**Date:** 2026-06-12 | **Last updated:** 2026-06-12 (final-review fixes — commit 0c002e8)
+**Date:** 2026-06-12 | **Last updated:** 2026-06-12 | **Status: v1.0.0 SHIPPED to aunt** (final-review fixes — commit 0c002e8)
 
 ---
 
@@ -56,3 +56,5 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
+- **Next session likely starts with aunt's feedback on v1.0.0.** Known deferred items: assistant role w/ PIN (Reports hidden), auto-start on Windows boot (`app.setLoginItemSettings`) — user asked about "startup" once, clarified as Start Menu shortcut, boot-launch explicitly not done yet.
+- If logo changes again: replace `icon/duckduckwash.png`, then re-copy to `src/renderer/src/assets/logo.png` + `resources/icon.png` and regenerate square `build/icon.png`, then `npm run build:win`.
