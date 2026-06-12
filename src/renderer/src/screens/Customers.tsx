@@ -8,6 +8,7 @@ export default function Customers(): JSX.Element {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [form, setForm] = useState<typeof EMPTY | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
 
   const reload = useCallback(() => {
     window.api.customers.list().then((r) => setCustomers(r as Customer[]))
@@ -16,16 +17,30 @@ export default function Customers(): JSX.Element {
 
   async function save(): Promise<void> {
     if (!form || !form.name.trim()) return
-    await window.api.customers.create({
-      name: form.name, location: form.location || null, phone: form.phone || null, notes: form.notes || null
-    })
-    setForm(null)
-    reload()
+    setSaving(true)
+    try {
+      await window.api.customers.create({
+        name: form.name, location: form.location || null, phone: form.phone || null, notes: form.notes || null
+      })
+      setForm(null)
+      reload()
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setSaving(false)
+    }
   }
   async function remove(id: number): Promise<void> {
-    await window.api.customers.remove(id)
-    setConfirmDelete(null)
-    reload()
+    setSaving(true)
+    try {
+      await window.api.customers.remove(id)
+      setConfirmDelete(null)
+      reload()
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -55,7 +70,7 @@ export default function Customers(): JSX.Element {
               value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             <div className="modal-action">
               <button className="btn btn-lg" onClick={() => setForm(null)}>Cancel</button>
-              <button className="btn btn-primary btn-lg" disabled={!form.name.trim()} onClick={save}>Save</button>
+              <button className="btn btn-primary btn-lg" disabled={!form.name.trim() || saving} onClick={save}>Save</button>
             </div>
           </div>
         </div>
@@ -67,7 +82,7 @@ export default function Customers(): JSX.Element {
             <p className="text-xl">Delete this customer? Past orders are kept.</p>
             <div className="modal-action">
               <button className="btn btn-lg" onClick={() => setConfirmDelete(null)}>Cancel</button>
-              <button className="btn btn-error btn-lg" onClick={() => remove(confirmDelete)}>Delete</button>
+              <button className="btn btn-error btn-lg" disabled={saving} onClick={() => remove(confirmDelete)}>Delete</button>
             </div>
           </div>
         </div>

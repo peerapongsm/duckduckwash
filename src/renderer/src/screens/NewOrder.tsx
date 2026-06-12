@@ -22,6 +22,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [selected, setSelected] = useState<number[]>([])
   const [delivery, setDelivery] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     window.api.services.list().then((s) => setServices(s as Service[]))
@@ -49,16 +50,23 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
     setSuggestions([])
   }
   async function save(): Promise<void> {
-    await window.api.orders.intake({
-      customer_id: customerId,
-      customer_name: name.trim(),
-      customer_location: location.trim() || null,
-      customer_phone: phone.trim() || null,
-      is_delivery: delivery,
-      service_ids: selected,
-      notes: null
-    })
-    go({ name: 'home' })
+    setSaving(true)
+    try {
+      await window.api.orders.intake({
+        customer_id: customerId,
+        customer_name: name.trim(),
+        customer_location: location.trim() || null,
+        customer_phone: phone.trim() || null,
+        is_delivery: delivery,
+        service_ids: selected,
+        notes: null
+      })
+      go({ name: 'home' })
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -129,7 +137,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
         <button className="btn btn-lg flex-1" onClick={() => go({ name: 'home' })}>
           Cancel
         </button>
-        <button className="btn btn-primary btn-lg flex-1" disabled={!valid} onClick={save}>
+        <button className="btn btn-primary btn-lg flex-1" disabled={!valid || saving} onClick={save}>
           Create order
         </button>
       </div>

@@ -13,22 +13,37 @@ const TABS: { key: OrderStatus; label: string }[] = [
 export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element {
   const [tab, setTab] = useState<OrderStatus>('waiting_input')
   const [orders, setOrders] = useState<Order[]>([])
-  const [confirm, setConfirm] = useState<{ kind: 'delete' | 'close'; id: number } | null>(null)
+  const [confirm, setConfirm] = useState<{ kind: 'delete' | 'close'; id: number; from: OrderStatus } | null>(null)
+  const [busy, setBusy] = useState(false)
 
   const reload = useCallback(() => {
     window.api.orders.list(tab).then((r) => setOrders(r as Order[]))
   }, [tab])
   useEffect(reload, [reload])
 
-  async function advance(id: number): Promise<void> {
-    await window.api.orders.advanceStatus(id)
-    setConfirm(null)
-    reload()
+  async function advance(id: number, from: OrderStatus): Promise<void> {
+    setBusy(true)
+    try {
+      await window.api.orders.advanceStatus(id, from)
+      setConfirm(null)
+      reload()
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setBusy(false)
+    }
   }
   async function remove(id: number): Promise<void> {
-    await window.api.orders.remove(id)
-    setConfirm(null)
-    reload()
+    setBusy(true)
+    try {
+      await window.api.orders.remove(id)
+      setConfirm(null)
+      reload()
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -53,23 +68,23 @@ export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element
             </div>
           </div>
           {o.status === 'waiting_input' && (
-            <button className="btn btn-primary btn-lg" onClick={() => go({ name: 'orderDetails', orderId: o.id })}>
+            <button className="btn btn-primary btn-lg" disabled={busy} onClick={() => go({ name: 'orderDetails', orderId: o.id })}>
               Add details
             </button>
           )}
           {o.status === 'in_progress' && (
             <>
-              <button className="btn btn-lg" onClick={() => go({ name: 'orderDetails', orderId: o.id })}>Edit</button>
-              <button className="btn btn-primary btn-lg" onClick={() => advance(o.id)}>Mark complete</button>
+              <button className="btn btn-lg" disabled={busy} onClick={() => go({ name: 'orderDetails', orderId: o.id })}>Edit</button>
+              <button className="btn btn-primary btn-lg" disabled={busy} onClick={() => advance(o.id, 'in_progress')}>Mark complete</button>
             </>
           )}
           {o.status === 'complete' && (
-            <button className="btn btn-success btn-lg" onClick={() => setConfirm({ kind: 'close', id: o.id })}>
+            <button className="btn btn-success btn-lg" disabled={busy} onClick={() => setConfirm({ kind: 'close', id: o.id, from: 'complete' })}>
               Close (paid & picked up)
             </button>
           )}
           {o.status !== 'closed' && (
-            <button className="btn btn-ghost" onClick={() => setConfirm({ kind: 'delete', id: o.id })}>✕</button>
+            <button className="btn btn-ghost" disabled={busy} onClick={() => setConfirm({ kind: 'delete', id: o.id, from: o.status })}>✕</button>
           )}
         </div>
       ))}
@@ -81,11 +96,11 @@ export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element
               {confirm.kind === 'delete' ? 'Delete this order?' : 'Customer paid and picked up — close this order?'}
             </p>
             <div className="modal-action">
-              <button className="btn btn-lg" onClick={() => setConfirm(null)}>Cancel</button>
+              <button className="btn btn-lg" disabled={busy} onClick={() => setConfirm(null)}>Cancel</button>
               {confirm.kind === 'delete' ? (
-                <button className="btn btn-error btn-lg" onClick={() => remove(confirm.id)}>Delete</button>
+                <button className="btn btn-error btn-lg" disabled={busy} onClick={() => remove(confirm.id)}>Delete</button>
               ) : (
-                <button className="btn btn-success btn-lg" onClick={() => advance(confirm.id)}>Close order</button>
+                <button className="btn btn-success btn-lg" disabled={busy} onClick={() => advance(confirm.id, 'complete')}>Close order</button>
               )}
             </div>
           </div>

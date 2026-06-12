@@ -6,7 +6,7 @@ import { monthlyReport } from './logic/reports'
 import { backupDb } from './backup'
 import type { OrderIntake, OrderDetailsInput, OrderStatus } from '../shared/types'
 
-export function registerIpc(db: Database.Database, dbPath: string, backupDir: string): void {
+export function registerIpc(db: Database.Database, backupDir: string): void {
   // --- customers (regulars only; never auto-created from orders) ---
   ipcMain.handle('customers:list', () =>
     db.prepare('SELECT * FROM customers ORDER BY name').all())
@@ -49,6 +49,9 @@ export function registerIpc(db: Database.Database, dbPath: string, backupDir: st
   ipcMain.handle('orders:saveDetails', (_e, input: OrderDetailsInput) => {
     const order = db.prepare('SELECT * FROM orders WHERE id=?').get(input.order_id) as { is_delivery: number; status: OrderStatus } | undefined
     if (!order) throw new Error('order not found')
+    if (order.status === 'closed') throw new Error('order is closed')
+    if (input.garments.length === 0) throw new Error('add at least one garment')
+    for (const g of input.garments) if (g.quantity < 1) throw new Error('garment quantity must be at least 1')
     const fee = Number((db.prepare("SELECT value FROM settings WHERE key='delivery_fee'").get() as { value: string }).value)
     const total = computeOrderTotal(
       input.items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price })),
@@ -85,9 +88,9 @@ export function registerIpc(db: Database.Database, dbPath: string, backupDir: st
     garments: db.prepare('SELECT * FROM order_garments WHERE order_id=?').all(id)
   }))
 
-  ipcMain.handle('orders:advanceStatus', (_e, id: number) => {
+  ipcMain.handle('orders:advanceStatus', (_e, id: number, from: OrderStatus) => {
     const row = db.prepare('SELECT status FROM orders WHERE id=?').get(id) as { status: OrderStatus } | undefined
-    if (!row) return 0
+    if (!row || row.status !== from) return 0
     const next = nextStatus(row.status)
     if (!next) return 0
     return db.prepare('UPDATE orders SET status=? WHERE id=?').run(next, id).changes
@@ -113,8 +116,10 @@ export function registerIpc(db: Database.Database, dbPath: string, backupDir: st
   ipcMain.handle('services:list', () =>
     db.prepare('SELECT * FROM services WHERE active=1 ORDER BY id').all())
 
-  ipcMain.handle('services:updatePrice', (_e, p: { id: number; default_price: number }) =>
-    db.prepare("UPDATE services SET default_price=? WHERE id=? AND pricing='fixed'").run(p.default_price, p.id).changes)
+  ipcMain.handle('services:updatePrice', (_e, p: { id: number; default_price: number }) => {
+    if (!Number.isFinite(p.default_price) || p.default_price <= 0) throw new Error('price must be positive')
+    return db.prepare("UPDATE services SET default_price=? WHERE id=? AND pricing='fixed'").run(p.default_price, p.id).changes
+  })
 
   ipcMain.handle('settings:get', (_e, key: string) =>
     (db.prepare('SELECT value FROM settings WHERE key=?').get(key) as { value: string } | undefined)?.value ?? null)
@@ -134,6 +139,6 @@ export function registerIpc(db: Database.Database, dbPath: string, backupDir: st
   })
 
   // --- backup ---
-  ipcMain.handle('backup:run', () => backupDb(dbPath, backupDir))
+  ipcMain.handle('backup:run', () => backupDb(db, backupDir))
   ipcMain.handle('backup:openFolder', () => shell.openPath(backupDir))
 }

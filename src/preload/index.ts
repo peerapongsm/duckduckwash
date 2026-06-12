@@ -14,7 +14,7 @@ const api = {
     saveDetails: (d: unknown) => invoke('orders:saveDetails', d),
     list: (status: string) => invoke('orders:list', status),
     get: (id: number) => invoke('orders:get', id),
-    advanceStatus: (id: number) => invoke('orders:advanceStatus', id),
+    advanceStatus: (id: number, from: string) => invoke('orders:advanceStatus', id, from),
     remove: (id: number) => invoke('orders:delete', id)
   },
   expenses: {

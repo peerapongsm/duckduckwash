@@ -21,6 +21,7 @@ export default function Expenses(): JSX.Element {
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
 
   const reload = useCallback(() => {
     window.api.expenses.list(month).then((r) => setItems(r as Expense[]))
@@ -28,16 +29,30 @@ export default function Expenses(): JSX.Element {
   useEffect(reload, [reload])
 
   async function save(): Promise<void> {
-    await window.api.expenses.create({ date, category: cat, description: note || null, amount: Number(amount) })
-    setAdding(false)
-    setAmount('')
-    setNote('')
-    reload()
+    setSaving(true)
+    try {
+      await window.api.expenses.create({ date, category: cat, description: note || null, amount: Number(amount) })
+      setAdding(false)
+      setAmount('')
+      setNote('')
+      reload()
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setSaving(false)
+    }
   }
   async function remove(id: number): Promise<void> {
-    await window.api.expenses.remove(id)
-    setConfirmDelete(null)
-    reload()
+    setSaving(true)
+    try {
+      await window.api.expenses.remove(id)
+      setConfirmDelete(null)
+      reload()
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -71,7 +86,7 @@ export default function Expenses(): JSX.Element {
               value={note} onChange={(e) => setNote(e.target.value)} />
             <div className="modal-action">
               <button className="btn btn-lg" onClick={() => setAdding(false)}>Cancel</button>
-              <button className="btn btn-primary btn-lg" disabled={Number(amount) <= 0} onClick={save}>Save</button>
+              <button className="btn btn-primary btn-lg" disabled={Number(amount) <= 0 || saving} onClick={save}>Save</button>
             </div>
           </div>
         </div>
@@ -83,7 +98,7 @@ export default function Expenses(): JSX.Element {
             <p className="text-xl">Delete this expense?</p>
             <div className="modal-action">
               <button className="btn btn-lg" onClick={() => setConfirmDelete(null)}>Cancel</button>
-              <button className="btn btn-error btn-lg" onClick={() => remove(confirmDelete)}>Delete</button>
+              <button className="btn btn-error btn-lg" disabled={saving} onClick={() => remove(confirmDelete)}>Delete</button>
             </div>
           </div>
         </div>

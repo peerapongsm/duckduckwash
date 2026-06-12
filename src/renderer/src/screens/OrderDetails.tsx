@@ -28,6 +28,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [items, setItems] = useState<ItemRow[]>([])
   const [garments, setGarments] = useState<GarmentRow[]>([])
   const [fee, setFee] = useState(20)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     window.api.orders.get(orderId).then((res) => {
@@ -62,12 +63,19 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   }
 
   async function save(): Promise<void> {
-    await window.api.orders.saveDetails({
-      order_id: orderId,
-      items: items.map((i) => ({ item_id: i.id, quantity: i.quantity!, unit_price: i.unit_price! })),
-      garments
-    })
-    go({ name: 'orders' })
+    setSaving(true)
+    try {
+      await window.api.orders.saveDetails({
+        order_id: orderId,
+        items: items.map((i) => ({ item_id: i.id, quantity: i.quantity!, unit_price: i.unit_price! })),
+        garments
+      })
+      go({ name: 'orders' })
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (!order) return <div />
@@ -135,7 +143,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       </div>
       <div className="flex gap-2">
         <button className="btn btn-lg flex-1" onClick={() => go({ name: 'orders' })}>Cancel</button>
-        <button className="btn btn-primary btn-lg flex-1" disabled={!valid} onClick={save}>Save details</button>
+        <button className="btn btn-primary btn-lg flex-1" disabled={!valid || saving} onClick={save}>Save details</button>
       </div>
     </div>
   )

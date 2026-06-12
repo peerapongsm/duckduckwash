@@ -18,12 +18,21 @@ export default function Settings(): JSX.Element {
   }, [])
 
   async function savePrice(id: number, price: number): Promise<void> {
-    await window.api.services.updatePrice({ id, default_price: price })
+    if (price <= 0) return
+    try {
+      await window.api.services.updatePrice({ id, default_price: price })
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    }
   }
   async function runBackup(): Promise<void> {
-    await window.api.backup.run()
-    setBackedUp(true)
-    setTimeout(() => setBackedUp(false), 3000)
+    try {
+      await window.api.backup.run()
+      setBackedUp(true)
+      setTimeout(() => setBackedUp(false), 3000)
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    }
   }
 
   return (
