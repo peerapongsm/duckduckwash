@@ -1,5 +1,5 @@
 # DuckDuckWash — Memory Log
-**Date:** 2026-06-12 | **Last updated:** 2026-06-12 | **Status: v1.0.1 installer built, awaiting delivery to aunt** (aunt has v1.0.0)
+**Date:** 2026-06-12 | **Last updated:** 2026-06-12 | **Status: v1.0.2 installer built, awaiting delivery to aunt** (aunt has v1.0.0; v1.0.1 never sent)
 
 ---
 
@@ -58,7 +58,7 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - **Icon swapped to alt duck art post-ship** (commit `e8dc379`): installer rebuilt 16:16 (~105MB) with new icon.
 - **Feedback round 1 (commit `4704cf8`):** phone → contact everywhere (free text, maxLength 256, 10-digit validation dropped; DB columns renamed `customers.contact` / `orders.customer_contact` with auto ALTER TABLE migration for v1.0.0 DBs — migration covered by test); expense categories now supplies/utilities/rent/food/salary/other; expense modal does batch entry (rows + shared date, `expenses:createMany` transaction, replaced `expenses:create`); delivery free (see price model). 12/12 tests + typecheck green.
 - **v1.0.1 installer ready to send** (16:42, 100.6MB, SHA256 C71DDA62…) at `release/DuckDuckWash Setup 1.0.1.exe` — new duck icon + all round-1 changes; version bumped commit `11c80f2`. Stale `Setup 1.0.0.exe` builds still in `release/` (gitignored). Dev server stopped.
-- **Uncommitted (post-v1.0.1):** NewOrder service buttons single-select; OrderDetails garment preset/custom add increments existing row on case-insensitive name match instead of spawning duplicate. Typecheck green; not in v1.0.1 installer — needs rebuild before next ship.
+- **v1.0.2 built** (commit `716bb24`, installer 20:54, 100.6MB, SHA256 37B780BB…) at `release/DuckDuckWash Setup 1.0.2.exe` — NewOrder service buttons single-select; OrderDetails garment preset/custom add increments existing row on case-insensitive name match instead of spawning duplicate. Supersedes v1.0.1 (never sent). Auto-update declined — user keeps sending installers manually (running new Setup.exe updates in place, DB survives).
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
