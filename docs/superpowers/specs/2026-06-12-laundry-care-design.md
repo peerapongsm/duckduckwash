@@ -40,7 +40,7 @@ A local-only store management app for a small laundry business, run by a non-tec
 ## 3. Data Model (SQLite)
 
 ```sql
-customers (
+customers (                     -- REGULARS ONLY, added deliberately by the user
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,          -- NOT unique: 3 Peters can coexist
   location TEXT,               -- hotel/condo + room, optional
@@ -51,7 +51,9 @@ customers (
 
 orders (
   id INTEGER PRIMARY KEY,
-  customer_id INTEGER NOT NULL REFERENCES customers(id),
+  customer_id INTEGER REFERENCES customers(id),  -- NULL for walk-ins; set only when a saved regular is picked
+  customer_name TEXT NOT NULL, -- always stored inline on the order (walk-in name, or snapshot of the regular's name)
+  customer_location TEXT,      -- inline, optional
   created_at TEXT NOT NULL,    -- full datetime; name+location+datetime is the practical order identifier
   status TEXT NOT NULL DEFAULT 'received',  -- received | ready | delivered
   is_delivery INTEGER NOT NULL DEFAULT 0,   -- adds flat 20 THB
@@ -108,14 +110,15 @@ Reports are computed live from queries — no stored totals beyond `orders.total
 
 1. **Home** — today's summary cards (income today, undelivered orders, unpaid orders) + one big **+ New Order** button.
 2. **New Order** — single form:
-   - Customer: type name → autocomplete. Each suggestion shows **name + location + phone + last-order date** to disambiguate duplicates. Dropdown always ends with "+ New customer named X".
+   - Customer: type name → autocomplete suggests **saved regulars only**. Each suggestion shows **name + location + phone + last-order date** to disambiguate duplicates. Typing a name that matches nothing just stores it inline on the order — walk-ins are NOT added to the customers table (most are foreign travelers who won't return). Saving a regular is a deliberate action on the Customers screen.
    - Tap a big service button (5 services) → enter kg/items → price auto-calculates and shows immediately. Dry cleaning asks for a manual price. Multiple line items per order.
    - Toggles: delivery (+20), paid.
    - Large running total at the bottom → Save → back to Home.
 3. **Orders** — list with status tabs (Received / Ready / Delivered). Every row shows **customer name + location + datetime**. One big button per row advances status to the next step; a second button marks paid.
-4. **Expenses** — list + big **+ Expense** button: date (defaults to today), 4 big category buttons, amount, optional note.
-5. **Reports** — month picker → three cards: revenue / expenses / profit, plus one daily bar chart. Excel export. (Hidden from the future assistant role.)
-6. **Settings** — language toggle, price list editor, backup now, open backup folder.
+4. **Customers** — list of saved regulars + big **+ Regular Customer** button (name, location, phone, notes). This is the ONLY place customers are created; orders never auto-create them.
+5. **Expenses** — list + big **+ Expense** button: date (defaults to today), 4 big category buttons, amount, optional note.
+6. **Reports** — month picker → three cards: revenue / expenses / profit, plus one daily bar chart. Excel export. (Hidden from the future assistant role.)
+7. **Settings** — language toggle, price list editor, backup now, open backup folder.
 
 ## 5. Roles
 
@@ -127,7 +130,7 @@ Reports are computed live from queries — no stored totals beyond `orders.total
 - All writes in transactions; SQLite WAL mode — a power cut mid-write cannot corrupt data.
 - Form validation: no negative prices/quantities, no empty required fields; Save disabled until valid.
 - Deleting an order or customer always shows a confirmation dialog.
-- A customer with existing orders cannot be deleted (soft block with an explanatory message).
+- Deleting a regular customer keeps their past orders intact — orders carry the name/location inline, so history never breaks.
 
 ## 7. Testing
 

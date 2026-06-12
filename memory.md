@@ -18,6 +18,7 @@
 - **No data import — start fresh.** (Reversed earlier decision: aunt's Excel is too messy/inconsistent to parse reliably. Excel files stay only as feature reference.)
 - **UX priority: must be easy for low-tech and elderly users.** Big buttons, minimal fields, no jargon, hard to make mistakes.
 - **Cash-only store.** No payment method field — orders just have a paid/unpaid flag.
+- **Walk-ins are never added to the customers table.** Orders store `customer_name`/`customer_location` inline; `customer_id` is nullable and set only when a saved regular is picked. Regulars are added deliberately on the Customers screen only (most walk-ins are foreign travelers who won't return).
 - **Customer names are not unique.** Walk-ins may give only a name (first/last/nickname/alias) — duplicates expected (3 Peters, 2 Michelles). No unique constraint; UI must disambiguate via location/phone/last-order date and allow "create new customer with same name".
 - **Orders store full datetime (`created_at`), not just date.** Name + location + datetime is the practical identifier for an order — display all three together everywhere orders are listed.
 - **Service price list** (THB):
@@ -32,9 +33,10 @@
 - MongoDB MCP server is available in this environment — candidate for the database if needed.
 
 ## 3. Current State
-- Project just initialized. Directory is empty except `.claude/settings.local.json`.
-- Not a git repository yet.
-- Waiting on: aunt's Excel file from the user — read it to derive features and data model before picking stack.
+- Design spec written and committed: `docs/superpowers/specs/2026-06-12-laundry-care-design.md` — covers stack, schema, screens, roles, error handling, testing.
+- Git repo initialized (branch `main`). `.gitignore` excludes `*.xlsx` (aunt's real financial data must never be committed), `*.db`, `backups/`.
+- Awaiting user review of the spec, then next step is the writing-plans skill → implementation plan.
+- No code yet.
 
 ## 4. Notes
 - Role model when scaling: admin sees everything; assistant blocked from reports and similar sensitive views. Exact restriction list TBD.
