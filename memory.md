@@ -32,7 +32,8 @@
 | wash/dry/fold/iron | kg | 200 |
 | iron | item | custom |
 | dry clean | item | custom |
-| delivery | flat | always 20 |
+
+- **Delivery is free (changed post-v1.0.0, commit `4704cf8`)** — `is_delivery` is an informational tag only; no fee in totals, `delivery_fee` setting no longer seeded/used. Old closed orders keep their +20 totals (historical).
 
 At order creation aunt only picks categories; later she fills in kg (per-kg services) or the custom price (iron, dry clean).
 
@@ -53,7 +54,9 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - Reports are date-range based (commit `92bbc15`): `rangeReport(db, from, to)` replaced monthlyReport; presets Today / This month / This year + free from/to pickers; buckets daily for spans ≤62 days, monthly beyond (annual readable); IPC `reports:range`.
 - Delivery is editable on Order Details (commit `5b09c5b`): toggle persists via `saveDetails.is_delivery`, total recomputed with/without the 20 fee; complete-status rows also show Edit (customer picks up instead of delivery).
 - **SHIPPED 2026-06-12:** installer `release/DuckDuckWash Setup 1.0.0.exe` (96.4MB, 15:35, SHA256 02E499CF…) sent to aunt — duckwash theme, range reports, editable delivery, desktop + start menu shortcuts.
-- **Icon swapped to alt duck art post-ship** (commit `e8dc379`): installer rebuilt 16:16 (~105MB) with new icon. **Aunt still has the 15:35 build — re-send if she should get the new icon.**
+- **Icon swapped to alt duck art post-ship** (commit `e8dc379`): installer rebuilt 16:16 (~105MB) with new icon.
+- **Feedback round 1 (commit `4704cf8`):** phone → contact everywhere (free text, maxLength 256, 10-digit validation dropped; DB columns renamed `customers.contact` / `orders.customer_contact` with auto ALTER TABLE migration for v1.0.0 DBs — migration covered by test); expense categories now supplies/utilities/rent/food/salary/other; expense modal does batch entry (rows + shared date, `expenses:createMany` transaction, replaced `expenses:create`); delivery free (see price model). 12/12 tests + typecheck green.
+- **Installer NOT rebuilt since feedback round 1 — aunt still has the 15:35 v1.0.0 build.** Need `npm run build:win` + re-send when round done. Dev server running for user recheck.
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
