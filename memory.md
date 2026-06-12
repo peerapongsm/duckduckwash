@@ -51,6 +51,7 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - Post-merge UX round (commit `ef06e97`): THB unit labels in Settings; phone fields validate `^\d{10}$` when non-empty (intake + customers); garment "Other" replaced by free-text input — names persist in `order_garments` and resurface as preset buttons via new `garments:types` IPC (distinct query, no new table).
 - UI redesign (commit `de20fdb`, frontend-design skill): custom daisyUI theme `duckwash` — duck-yellow primary #FFC93C, wash-blue secondary #4FA8D8, cream base #FFFBF2; Fredoka (display) + Nunito (body) bundled offline via @fontsource; left sidebar nav with emoji icons replaced bottom nav; status-colored left-edge order cards (warning/secondary/success/neutral); `rise` stagger animation + `lift` hover classes in main.css.
 - Reports are date-range based (commit `92bbc15`): `rangeReport(db, from, to)` replaced monthlyReport; presets Today / This month / This year + free from/to pickers; buckets daily for spans ≤62 days, monthly beyond (annual readable); IPC `reports:range`.
+- Delivery is editable on Order Details (commit `5b09c5b`): toggle persists via `saveDetails.is_delivery`, total recomputed with/without the 20 fee; complete-status rows also show Edit (customer picks up instead of delivery).
 - Installer NOT rebuilt since `ef06e97` — run `npm run build:win` before shipping to aunt.
 
 ## 4. Notes
