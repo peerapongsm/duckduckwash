@@ -56,7 +56,7 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
 - **SHIPPED 2026-06-12:** installer `release/DuckDuckWash Setup 1.0.0.exe` (96.4MB, 15:35, SHA256 02E499CF…) sent to aunt — duckwash theme, range reports, editable delivery, desktop + start menu shortcuts.
 - **Icon swapped to alt duck art post-ship** (commit `e8dc379`): installer rebuilt 16:16 (~105MB) with new icon.
 - **Feedback round 1 (commit `4704cf8`):** phone → contact everywhere (free text, maxLength 256, 10-digit validation dropped; DB columns renamed `customers.contact` / `orders.customer_contact` with auto ALTER TABLE migration for v1.0.0 DBs — migration covered by test); expense categories now supplies/utilities/rent/food/salary/other; expense modal does batch entry (rows + shared date, `expenses:createMany` transaction, replaced `expenses:create`); delivery free (see price model). 12/12 tests + typecheck green.
-- **Installer NOT rebuilt since feedback round 1 — aunt still has the 15:35 v1.0.0 build.** Need `npm run build:win` + re-send when round done. Dev server running for user recheck.
+- **Installer rebuilt after feedback round 1** (16:39, 100.6MB, SHA256 BB8DF0EC…) at `release/DuckDuckWash Setup 1.0.0.exe` — includes new duck icon + all round-1 changes; ready to send to aunt. Version string still 1.0.0 (package.json not bumped). Dev server stopped.
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
