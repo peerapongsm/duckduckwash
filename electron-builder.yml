@@ -1,7 +1,8 @@
 appId: com.duckduckwash.app
-productName: laundry-care
+productName: DuckDuckWash
 directories:
   buildResources: build
+  output: release
 files:
   - '!**/.vscode/*'
   - '!src/**'
@@ -13,31 +14,15 @@ asarUnpack:
   - 'resources/**'
   - '**/node_modules/better-sqlite3/**'
 win:
-  executableName: laundry-care
+  target:
+    - nsis
+  icon: icon/duckduckwash-icon-256.png
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  oneClick: true
+  perMachine: false
+  # CRITICAL: never wipe user data on uninstall — would destroy the SQLite database
+  deleteAppDataOnUninstall: false
+  artifactName: ${productName} Setup ${version}.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
-mac:
-  entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
-dmg:
-  artifactName: ${name}-${version}.${ext}
-linux:
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
-publish:
-  provider: generic
-  url: https://example.com/auto-updates
