@@ -37,7 +37,8 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
     window.api.customers.search(name.trim()).then((r) => setSuggestions(r as Suggestion[]))
   }, [name, customerId])
 
-  const valid = name.trim() !== '' && selected.length > 0
+  const phoneValid = phone.trim() === '' || /^\d{10}$/.test(phone.trim())
+  const valid = name.trim() !== '' && selected.length > 0 && phoneValid
 
   function toggleService(id: number): void {
     setSelected(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id])
@@ -101,11 +102,12 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
         onChange={(e) => setLocation(e.target.value)}
       />
       <input
-        className="input input-bordered input-lg w-full"
+        className={`input input-bordered input-lg w-full ${phoneValid ? '' : 'input-error'}`}
         placeholder="Phone (optional)"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
       />
+      {!phoneValid && <div className="text-sm text-error">Phone must be exactly 10 digits</div>}
       {customerId === null && name.trim() !== '' && (
         <div className="text-sm opacity-60">Walk-in names are not saved as regular customers</div>
       )}

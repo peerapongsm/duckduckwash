@@ -38,13 +38,14 @@ export default function Settings(): JSX.Element {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
       <div>
-        <div className="mb-2 font-bold">Price list (per kg services)</div>
+        <div className="mb-2 font-bold">Price list (THB)</div>
         {services.filter((s) => s.pricing === 'fixed').map((s) => (
           <label key={s.id} className="mb-2 flex items-center gap-2">
-            <span className="flex-1">{SERVICE_LABELS[s.key]} (/{s.unit})</span>
+            <span className="flex-1">{SERVICE_LABELS[s.key]}</span>
             <input type="number" min="0" className="input input-bordered w-32 text-right"
               defaultValue={s.default_price ?? 0}
               onBlur={(e) => savePrice(s.id, Number(e.target.value))} />
+            <span className="w-16 opacity-70">THB/{s.unit}</span>
           </label>
         ))}
         <div className="text-sm opacity-60">Iron and Dry clean are priced per order.</div>

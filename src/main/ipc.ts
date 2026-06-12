@@ -99,6 +99,11 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
   ipcMain.handle('orders:delete', (_e, id: number) =>
     db.prepare('DELETE FROM orders WHERE id=?').run(id).changes)
 
+  // --- garments: every name ever used, for reusable preset buttons ---
+  ipcMain.handle('garments:types', () =>
+    (db.prepare('SELECT DISTINCT garment FROM order_garments ORDER BY garment').all() as { garment: string }[])
+      .map((r) => r.garment))
+
   // --- expenses ---
   ipcMain.handle('expenses:create', (_e, x: { date: string; category: string; description: string | null; amount: number }) => {
     if (x.amount <= 0) throw new Error('amount must be positive')

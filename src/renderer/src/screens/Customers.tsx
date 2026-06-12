@@ -10,6 +10,8 @@ export default function Customers(): JSX.Element {
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const phoneValid = !form || form.phone.trim() === '' || /^\d{10}$/.test(form.phone.trim())
+
   const reload = useCallback(() => {
     window.api.customers.list().then((r) => setCustomers(r as Customer[]))
   }, [])
@@ -64,13 +66,14 @@ export default function Customers(): JSX.Element {
               value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <input className="input input-bordered input-lg" placeholder="Location"
               value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-            <input className="input input-bordered input-lg" placeholder="Phone"
+            <input className={`input input-bordered input-lg ${phoneValid ? '' : 'input-error'}`} placeholder="Phone"
               value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            {!phoneValid && <div className="text-sm text-error">Phone must be exactly 10 digits</div>}
             <input className="input input-bordered input-lg" placeholder="Notes"
               value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             <div className="modal-action">
               <button className="btn btn-lg" onClick={() => setForm(null)}>Cancel</button>
-              <button className="btn btn-primary btn-lg" disabled={!form.name.trim() || saving} onClick={save}>Save</button>
+              <button className="btn btn-primary btn-lg" disabled={!form.name.trim() || !phoneValid || saving} onClick={save}>Save</button>
             </div>
           </div>
         </div>

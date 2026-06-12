@@ -19,7 +19,7 @@ const SERVICE_LABELS: Record<string, string> = {
   iron: 'Iron',
   dry_clean: 'Dry clean'
 }
-const GARMENT_PRESETS = ['Shirt', 'Pants', 'Shorts', 'Dress', 'Skirt', 'Blouse', 'Jacket', 'Bras', 'Underwear', 'Other']
+const GARMENT_PRESETS = ['Shirt', 'Pants', 'Shorts', 'Dress', 'Skirt', 'Blouse', 'Jacket', 'Bras', 'Underwear']
 
 interface GarmentRow { garment: string; quantity: number; special_care: boolean }
 
@@ -29,6 +29,12 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [garments, setGarments] = useState<GarmentRow[]>([])
   const [fee, setFee] = useState(20)
   const [saving, setSaving] = useState(false)
+  const [knownTypes, setKnownTypes] = useState<string[]>([])
+  const [customType, setCustomType] = useState('')
+
+  useEffect(() => {
+    window.api.garments.types().then((t) => setKnownTypes(t as string[]))
+  }, [])
 
   useEffect(() => {
     window.api.orders.get(orderId).then((res) => {
@@ -55,8 +61,26 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   function updItem(id: number, patch: Partial<ItemRow>): void {
     setItems(items.map((i) => (i.id === id ? { ...i, ...patch } : i)))
   }
+  // presets first, then every name ever used on past orders (deduped, case-insensitive)
+  const garmentButtons = useMemo(() => {
+    const seen = new Set(GARMENT_PRESETS.map((p) => p.toLowerCase()))
+    const extras = knownTypes.filter((t) => {
+      const k = t.toLowerCase()
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    return [...GARMENT_PRESETS, ...extras]
+  }, [knownTypes])
+
   function addGarment(g: string): void {
     setGarments([...garments, { garment: g, quantity: 1, special_care: false }])
+  }
+  function addCustomGarment(): void {
+    const g = customType.trim()
+    if (!g) return
+    addGarment(g)
+    setCustomType('')
   }
   function updGarment(idx: number, patch: Partial<GarmentRow>): void {
     setGarments(garments.map((g, i) => (i === idx ? { ...g, ...patch } : g)))
@@ -113,9 +137,19 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
 
       <div className="font-bold">Garments (required — what is in this order?)</div>
       <div className="flex flex-wrap gap-2">
-        {GARMENT_PRESETS.map((g) => (
+        {garmentButtons.map((g) => (
           <button key={g} className="btn btn-outline" onClick={() => addGarment(g)}>+ {g}</button>
         ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          className="input input-bordered flex-1"
+          placeholder="Other garment — type it (saved for next time)"
+          value={customType}
+          onChange={(e) => setCustomType(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') addCustomGarment() }}
+        />
+        <button className="btn btn-outline" disabled={!customType.trim()} onClick={addCustomGarment}>+ Add</button>
       </div>
       {garments.map((g, idx) => (
         <div key={idx} className="flex items-center gap-3 rounded-box bg-base-200 p-3">

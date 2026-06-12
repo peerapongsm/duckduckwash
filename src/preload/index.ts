@@ -22,6 +22,7 @@ const api = {
     list: (monthPrefix: string) => invoke('expenses:list', monthPrefix),
     remove: (id: number) => invoke('expenses:delete', id)
   },
+  garments: { types: () => invoke('garments:types') },
   services: {
     list: () => invoke('services:list'),
     updatePrice: (p: unknown) => invoke('services:updatePrice', p)
