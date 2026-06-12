@@ -16,7 +16,7 @@ asarUnpack:
 win:
   target:
     - nsis
-  icon: icon/duckduckwash-icon-256.png
+  # icon resolved from buildResources: build/icon.png (square-padded from icon/duckduckwash.png)
 nsis:
   oneClick: true
   perMachine: false
