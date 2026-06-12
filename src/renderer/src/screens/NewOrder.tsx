@@ -14,10 +14,9 @@ const SERVICE_LABELS: Record<string, string> = {
 
 export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Element {
   const [services, setServices] = useState<Service[]>([])
-  const [fee, setFee] = useState(20)
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
-  const [phone, setPhone] = useState('')
+  const [contact, setContact] = useState('')
   const [customerId, setCustomerId] = useState<number | null>(null)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [selected, setSelected] = useState<number[]>([])
@@ -26,7 +25,6 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
 
   useEffect(() => {
     window.api.services.list().then((s) => setServices(s as Service[]))
-    window.api.settings.get('delivery_fee').then((v) => setFee(Number((v as string | null) ?? 20)))
   }, [])
 
   useEffect(() => {
@@ -37,8 +35,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
     window.api.customers.search(name.trim()).then((r) => setSuggestions(r as Suggestion[]))
   }, [name, customerId])
 
-  const phoneValid = phone.trim() === '' || /^\d{10}$/.test(phone.trim())
-  const valid = name.trim() !== '' && selected.length > 0 && phoneValid
+  const valid = name.trim() !== '' && selected.length > 0
 
   function toggleService(id: number): void {
     setSelected(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id])
@@ -47,7 +44,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
     setCustomerId(c.id)
     setName(c.name)
     setLocation(c.location ?? '')
-    setPhone(c.phone ?? '')
+    setContact(c.contact ?? '')
     setSuggestions([])
   }
   async function save(): Promise<void> {
@@ -57,7 +54,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
         customer_id: customerId,
         customer_name: name.trim(),
         customer_location: location.trim() || null,
-        customer_phone: phone.trim() || null,
+        customer_contact: contact.trim() || null,
         is_delivery: delivery,
         service_ids: selected,
         notes: null
@@ -87,7 +84,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
             {suggestions.map((c) => (
               <li key={c.id}>
                 <button onClick={() => pick(c)}>
-                  <b>{c.name}</b> {c.location ?? ''} {c.phone ?? ''}{' '}
+                  <b>{c.name}</b> {c.location ?? ''} {c.contact ?? ''}{' '}
                   {c.last_order ? `· last ${c.last_order.slice(0, 10)}` : ''}
                 </button>
               </li>
@@ -102,12 +99,12 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
         onChange={(e) => setLocation(e.target.value)}
       />
       <input
-        className={`input input-bordered input-lg w-full ${phoneValid ? '' : 'input-error'}`}
-        placeholder="Phone (optional)"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        className="input input-bordered input-lg w-full"
+        placeholder="Contact (optional)"
+        maxLength={256}
+        value={contact}
+        onChange={(e) => setContact(e.target.value)}
       />
-      {!phoneValid && <div className="text-sm text-error">Phone must be exactly 10 digits</div>}
       {customerId === null && name.trim() !== '' && (
         <div className="text-sm opacity-60">Walk-in names are not saved as regular customers</div>
       )}
@@ -134,7 +131,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
           checked={delivery}
           onChange={(e) => setDelivery(e.target.checked)}
         />
-        <span>🛵 Delivery <b>(+{fee} ฿)</b></span>
+        <span>🛵 Delivery</span>
       </label>
 
       <div className="flex gap-2">

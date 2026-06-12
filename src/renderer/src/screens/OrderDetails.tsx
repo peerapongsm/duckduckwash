@@ -27,7 +27,6 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [order, setOrder] = useState<Order | null>(null)
   const [items, setItems] = useState<ItemRow[]>([])
   const [garments, setGarments] = useState<GarmentRow[]>([])
-  const [fee, setFee] = useState(20)
   const [saving, setSaving] = useState(false)
   const [knownTypes, setKnownTypes] = useState<string[]>([])
   const [customType, setCustomType] = useState('')
@@ -47,13 +46,12 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         garment: g.garment, quantity: g.quantity, special_care: g.special_care === 1
       })))
     })
-    window.api.settings.get('delivery_fee').then((v) => setFee(Number((v as string | null) ?? 20)))
   }, [orderId])
 
-  const total = useMemo(() => {
-    const sum = items.reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0)
-    return sum + (delivery ? fee : 0)
-  }, [items, delivery, fee])
+  const total = useMemo(
+    () => items.reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0),
+    [items]
+  )
 
   const valid =
     items.every((i) => (i.quantity ?? 0) > 0 && (i.unit_price ?? 0) > 0) &&
@@ -185,11 +183,11 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
           checked={delivery}
           onChange={(e) => setDelivery(e.target.checked)}
         />
-        <span>🛵 Delivery <b>(+{fee} ฿)</b> — turn off if the customer picks up instead</span>
+        <span>🛵 Delivery — turn off if the customer picks up instead</span>
       </label>
 
       <div className="rounded-box border-2 border-primary/50 bg-primary/15 p-4 text-right shadow-soft">
-        <span className="mr-3 align-middle opacity-60">{delivery ? `incl. ${fee} ฿ delivery · ` : ''}Total</span>
+        <span className="mr-3 align-middle opacity-60">Total</span>
         <span className="font-display align-middle text-5xl font-semibold">฿ {total.toLocaleString()}</span>
       </div>
       <div className="flex gap-2">

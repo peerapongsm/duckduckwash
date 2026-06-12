@@ -10,7 +10,7 @@ export function openDb(path: string): Database.Database {
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
       location TEXT,
-      phone TEXT,
+      contact TEXT,
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
     );
@@ -27,7 +27,7 @@ export function openDb(path: string): Database.Database {
       customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
       customer_name TEXT NOT NULL,
       customer_location TEXT,
-      customer_phone TEXT,
+      customer_contact TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
       status TEXT NOT NULL DEFAULT 'waiting_input',
       is_delivery INTEGER NOT NULL DEFAULT 0,
@@ -59,6 +59,14 @@ export function openDb(path: string): Database.Database {
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
   `)
 
+  // v1.0.0 databases used phone columns; contact is free text now
+  const renameColumn = (table: string, from: string, to: string): void => {
+    const cols = db.pragma(`table_info(${table})`) as { name: string }[]
+    if (cols.some((c) => c.name === from)) db.exec(`ALTER TABLE ${table} RENAME COLUMN ${from} TO ${to}`)
+  }
+  renameColumn('customers', 'phone', 'contact')
+  renameColumn('orders', 'customer_phone', 'customer_contact')
+
   const seed = db.transaction(() => {
     const ins = db.prepare(
       'INSERT OR IGNORE INTO services (key, unit, pricing, default_price) VALUES (?, ?, ?, ?)'
@@ -67,7 +75,6 @@ export function openDb(path: string): Database.Database {
     ins.run('wash_dry_fold_iron', 'kg', 'fixed', 200)
     ins.run('iron', 'item', 'custom', null)
     ins.run('dry_clean', 'item', 'custom', null)
-    db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES ('delivery_fee','20')").run()
   })
   seed()
   return db

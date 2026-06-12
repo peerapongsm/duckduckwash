@@ -2,15 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import type { Customer } from '../../../shared/types'
 
-const EMPTY = { name: '', location: '', phone: '', notes: '' }
+const EMPTY = { name: '', location: '', contact: '', notes: '' }
 
 export default function Customers(): JSX.Element {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [form, setForm] = useState<typeof EMPTY | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
-
-  const phoneValid = !form || form.phone.trim() === '' || /^\d{10}$/.test(form.phone.trim())
 
   const reload = useCallback(() => {
     window.api.customers.list().then((r) => setCustomers(r as Customer[]))
@@ -22,7 +20,7 @@ export default function Customers(): JSX.Element {
     setSaving(true)
     try {
       await window.api.customers.create({
-        name: form.name, location: form.location || null, phone: form.phone || null, notes: form.notes || null
+        name: form.name, location: form.location || null, contact: form.contact || null, notes: form.notes || null
       })
       setForm(null)
       reload()
@@ -64,7 +62,7 @@ export default function Customers(): JSX.Element {
           </div>
           <div className="flex-1">
             <div className="font-display text-xl font-semibold">{c.name}</div>
-            <div className="opacity-60">{[c.location, c.phone, c.notes].filter(Boolean).join(' · ')}</div>
+            <div className="opacity-60">{[c.location, c.contact, c.notes].filter(Boolean).join(' · ')}</div>
           </div>
           <button className="btn btn-ghost" onClick={() => setConfirmDelete(c.id)}>✕</button>
         </div>
@@ -77,14 +75,13 @@ export default function Customers(): JSX.Element {
               value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <input className="input input-bordered input-lg" placeholder="Location"
               value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-            <input className={`input input-bordered input-lg ${phoneValid ? '' : 'input-error'}`} placeholder="Phone"
-              value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            {!phoneValid && <div className="text-sm text-error">Phone must be exactly 10 digits</div>}
+            <input className="input input-bordered input-lg" placeholder="Contact" maxLength={256}
+              value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
             <input className="input input-bordered input-lg" placeholder="Notes"
               value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             <div className="modal-action">
               <button className="btn btn-lg" onClick={() => setForm(null)}>Cancel</button>
-              <button className="btn btn-primary btn-lg" disabled={!form.name.trim() || !phoneValid || saving} onClick={save}>Save</button>
+              <button className="btn btn-primary btn-lg" disabled={!form.name.trim() || saving} onClick={save}>Save</button>
             </div>
           </div>
         </div>

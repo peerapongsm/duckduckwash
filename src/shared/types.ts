@@ -10,7 +10,7 @@ export interface Customer {
   id: number
   name: string
   location: string | null
-  phone: string | null
+  contact: string | null
   notes: string | null
   created_at: string
 }
@@ -29,7 +29,7 @@ export interface Order {
   customer_id: number | null
   customer_name: string
   customer_location: string | null
-  customer_phone: string | null
+  customer_contact: string | null
   created_at: string
   status: OrderStatus
   is_delivery: number
@@ -59,7 +59,7 @@ export interface OrderIntake {
   customer_id: number | null
   customer_name: string
   customer_location: string | null
-  customer_phone: string | null
+  customer_contact: string | null
   is_delivery: boolean
   service_ids: number[]
   notes: string | null
@@ -96,7 +96,7 @@ export interface RangeReport {
 export interface Expense {
   id: number
   date: string
-  category: 'supplies' | 'utilities' | 'rent' | 'other'
+  category: 'supplies' | 'utilities' | 'rent' | 'food' | 'salary' | 'other'
   description: string | null
   amount: number
 }

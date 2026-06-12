@@ -18,7 +18,7 @@ const api = {
     remove: (id: number) => invoke('orders:delete', id)
   },
   expenses: {
-    create: (x: unknown) => invoke('expenses:create', x),
+    createMany: (xs: unknown[]) => invoke('expenses:createMany', xs),
     list: (monthPrefix: string) => invoke('expenses:list', monthPrefix),
     remove: (id: number) => invoke('expenses:delete', id)
   },

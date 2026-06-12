@@ -17,10 +17,10 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
        FROM customers c WHERE c.name LIKE '%' || ? || '%' ORDER BY c.name LIMIT 8`
     ).all(q))
 
-  ipcMain.handle('customers:create', (_e, c: { name: string; location: string | null; phone: string | null; notes: string | null }) => {
+  ipcMain.handle('customers:create', (_e, c: { name: string; location: string | null; contact: string | null; notes: string | null }) => {
     if (!c.name?.trim()) throw new Error('name required')
-    return db.prepare('INSERT INTO customers (name, location, phone, notes) VALUES (?,?,?,?)')
-      .run(c.name.trim(), c.location, c.phone, c.notes).lastInsertRowid
+    return db.prepare('INSERT INTO customers (name, location, contact, notes) VALUES (?,?,?,?)')
+      .run(c.name.trim(), c.location, c.contact, c.notes).lastInsertRowid
   })
 
   ipcMain.handle('customers:delete', (_e, id: number) =>
@@ -32,11 +32,11 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
     if (input.service_ids.length === 0) throw new Error('pick at least one service')
     const tx = db.transaction(() => {
       const orderId = db.prepare(
-        `INSERT INTO orders (customer_id, customer_name, customer_location, customer_phone, is_delivery, notes)
+        `INSERT INTO orders (customer_id, customer_name, customer_location, customer_contact, is_delivery, notes)
          VALUES (?,?,?,?,?,?)`
       ).run(
         input.customer_id, input.customer_name.trim(), input.customer_location,
-        input.customer_phone, input.is_delivery ? 1 : 0, input.notes
+        input.customer_contact, input.is_delivery ? 1 : 0, input.notes
       ).lastInsertRowid
       const insItem = db.prepare('INSERT INTO order_items (order_id, service_id) VALUES (?,?)')
       for (const sid of input.service_ids) insItem.run(orderId, sid)
@@ -52,11 +52,8 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
     if (order.status === 'closed') throw new Error('order is closed')
     if (input.garments.length === 0) throw new Error('add at least one garment')
     for (const g of input.garments) if (g.quantity < 1) throw new Error('garment quantity must be at least 1')
-    const fee = Number((db.prepare("SELECT value FROM settings WHERE key='delivery_fee'").get() as { value: string }).value)
     const total = computeOrderTotal(
-      input.items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price })),
-      input.is_delivery,
-      fee
+      input.items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price }))
     )
     const tx = db.transaction(() => {
       const upd = db.prepare('UPDATE order_items SET quantity=?, unit_price=?, total=? WHERE id=? AND order_id=?')
@@ -106,10 +103,15 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
       .map((r) => r.garment))
 
   // --- expenses ---
-  ipcMain.handle('expenses:create', (_e, x: { date: string; category: string; description: string | null; amount: number }) => {
-    if (x.amount <= 0) throw new Error('amount must be positive')
-    return db.prepare('INSERT INTO expenses (date, category, description, amount) VALUES (?,?,?,?)')
-      .run(x.date, x.category, x.description, x.amount).lastInsertRowid
+  ipcMain.handle('expenses:createMany', (_e, xs: { date: string; category: string; description: string | null; amount: number }[]) => {
+    if (xs.length === 0) throw new Error('add at least one expense')
+    for (const x of xs) if (x.amount <= 0) throw new Error('amount must be positive')
+    const ins = db.prepare('INSERT INTO expenses (date, category, description, amount) VALUES (?,?,?,?)')
+    const tx = db.transaction(() => {
+      for (const x of xs) ins.run(x.date, x.category, x.description, x.amount)
+    })
+    tx()
+    return xs.length
   })
 
   ipcMain.handle('expenses:list', (_e, monthPrefix: string) =>
