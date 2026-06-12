@@ -16,7 +16,7 @@
 
 1. Customer walks in and drops off a load.
 2. Owner creates the order at drop-off with only: customer name (+optional location/contact) and which **service types** the customer wants. Customer leaves. Order starts in **`waiting_input`**.
-3. Later, owner opens the order and fills in the details: weight in kg per service, custom prices for per-item services, and a **garment checklist** — garment type (shirt, dress, skirt, blouse, …) with a count per type, plus per-garment flags `needs_ironing` and `special_care` (a deliberate boolean instead of fabric types). The garment counts are a required part of detail input — at least one garment row must be entered before details can be saved. Saving details moves the order to **`in_progress`**.
+3. Later, owner opens the order and fills in the details: weight in kg per service, custom prices for per-item services, and a **garment checklist** — garment type (shirt, dress, skirt, blouse, …) with a count per type, plus a per-garment `special_care` flag (a deliberate boolean instead of fabric types). No iron flag on garments — ironing is already expressed by the service categories. The garment counts are a required part of detail input — at least one garment row must be entered before details can be saved. Saving details moves the order to **`in_progress`**.
 4. When the laundry is done, owner marks it **`complete`** (waiting for pickup).
 5. Customer returns, pays (cash only), takes the laundry → owner marks it **`closed`**. Closed implies paid; there is no separate paid flag.
 
@@ -90,7 +90,6 @@ order_garments (                -- informational checklist filled at detail inpu
   order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   garment TEXT NOT NULL,       -- shirt | pants | dress | skirt | blouse | ... (preset + free text)
   quantity INTEGER NOT NULL DEFAULT 1,
-  needs_ironing INTEGER NOT NULL DEFAULT 0,
   special_care INTEGER NOT NULL DEFAULT 0
 )
 
@@ -131,7 +130,7 @@ Delivery: always flat 20 THB (a flag on the order; `delivery_fee` in settings).
    - complete → **Close (paid & picked up)** behind a confirm
    - closed → read-only
    - Delete (✕) always behind a confirm dialog.
-4. **Order Details (phase 2 edit)** — for each chosen service: kg input for per-kg services; quantity + custom price input for iron and dry clean. Garment checklist: preset garment buttons (shirt, pants, dress, skirt, blouse, jacket, other) each with quantity stepper and two checkboxes — **needs ironing**, **special care**. Live total at the bottom. Save recomputes total and moves `waiting_input → in_progress` (editing later keeps the current status).
+4. **Order Details (phase 2 edit)** — for each chosen service: kg input for per-kg services; quantity + custom price input for iron and dry clean. Garment checklist: preset garment buttons (shirt, pants, shorts, dress, skirt, blouse, jacket, bras, underwear, other) each with quantity stepper and one checkbox — **special care**. Live total at the bottom. Save recomputes total and moves `waiting_input → in_progress` (editing later keeps the current status).
 5. **Customers** — saved regulars CRUD; the only place customers are created. Deleting a regular keeps past orders (inline name).
 6. **Expenses** — list + big **+ Expense**: date (default today), 4 big category buttons, amount, optional note.
 7. **Reports** — month picker → cards: revenue / expenses / profit + daily revenue bar chart. (Hidden from the future assistant role.)

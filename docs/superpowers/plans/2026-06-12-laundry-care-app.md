@@ -191,7 +191,6 @@ export interface OrderGarment {
   order_id: number
   garment: string
   quantity: number
-  needs_ironing: number
   special_care: number
 }
 
@@ -216,7 +215,6 @@ export interface ItemDetailInput {
 export interface GarmentInput {
   garment: string
   quantity: number
-  needs_ironing: boolean
   special_care: boolean
 }
 
@@ -357,7 +355,6 @@ export function openDb(path: string): Database.Database {
       order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
       garment TEXT NOT NULL,
       quantity INTEGER NOT NULL DEFAULT 1,
-      needs_ironing INTEGER NOT NULL DEFAULT 0,
       special_care INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS expenses (
@@ -709,10 +706,10 @@ export function registerIpc(db: Database.Database, dbPath: string, backupDir: st
 
       db.prepare('DELETE FROM order_garments WHERE order_id=?').run(input.order_id)
       const insG = db.prepare(
-        'INSERT INTO order_garments (order_id, garment, quantity, needs_ironing, special_care) VALUES (?,?,?,?,?)'
+        'INSERT INTO order_garments (order_id, garment, quantity, special_care) VALUES (?,?,?,?)'
       )
       for (const g of input.garments)
-        insG.run(input.order_id, g.garment, g.quantity, g.needs_ironing ? 1 : 0, g.special_care ? 1 : 0)
+        insG.run(input.order_id, g.garment, g.quantity, g.special_care ? 1 : 0)
 
       const newStatus = order.status === 'waiting_input' ? 'in_progress' : order.status
       db.prepare('UPDATE orders SET total=?, status=? WHERE id=?').run(total, newStatus, input.order_id)
@@ -1321,9 +1318,9 @@ const SERVICE_LABELS: Record<string, string> = {
   iron: 'Iron',
   dry_clean: 'Dry clean'
 }
-const GARMENT_PRESETS = ['Shirt', 'Pants', 'Dress', 'Skirt', 'Blouse', 'Jacket', 'Other']
+const GARMENT_PRESETS = ['Shirt', 'Pants', 'Shorts', 'Dress', 'Skirt', 'Blouse', 'Jacket', 'Bras', 'Underwear', 'Other']
 
-interface GarmentRow { garment: string; quantity: number; needs_ironing: boolean; special_care: boolean }
+interface GarmentRow { garment: string; quantity: number; special_care: boolean }
 
 export default function OrderDetails({ orderId, go }: { orderId: number; go: (s: Screen) => void }): JSX.Element {
   const [order, setOrder] = useState<Order | null>(null)
@@ -1336,8 +1333,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       setOrder(r.order)
       setItems(r.items.map((i) => ({ ...i, unit_price: i.unit_price ?? i.default_price })))
       setGarments(r.garments.map((g) => ({
-        garment: g.garment, quantity: g.quantity,
-        needs_ironing: g.needs_ironing === 1, special_care: g.special_care === 1
+        garment: g.garment, quantity: g.quantity, special_care: g.special_care === 1
       })))
     })
     window.api.settings.get('delivery_fee').then((v: string | null) => setFee(Number(v ?? 20)))
@@ -1357,7 +1353,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
     setItems(items.map((i) => (i.id === id ? { ...i, ...patch } : i)))
   }
   function addGarment(g: string): void {
-    setGarments([...garments, { garment: g, quantity: 1, needs_ironing: false, special_care: false }])
+    setGarments([...garments, { garment: g, quantity: 1, special_care: false }])
   }
   function updGarment(idx: number, patch: Partial<GarmentRow>): void {
     setGarments(garments.map((g, i) => (i === idx ? { ...g, ...patch } : g)))
@@ -1409,11 +1405,6 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
           <span className="flex-1">{g.garment}</span>
           <input type="number" min="1" className="input input-bordered w-20 text-right"
             value={g.quantity} onChange={(e) => updGarment(idx, { quantity: Number(e.target.value) || 1 })} />
-          <label className="label cursor-pointer gap-1">
-            <input type="checkbox" className="checkbox" checked={g.needs_ironing}
-              onChange={(e) => updGarment(idx, { needs_ironing: e.target.checked })} />
-            iron
-          </label>
           <label className="label cursor-pointer gap-1">
             <input type="checkbox" className="checkbox checkbox-warning" checked={g.special_care}
               onChange={(e) => updGarment(idx, { special_care: e.target.checked })} />
@@ -1803,6 +1794,6 @@ git commit -m "build: nsis windows installer with DuckDuckWash branding"
 
 ## Self-Review Notes
 
-- Spec coverage: two-phase flow (T7 `orders:intake`/`orders:saveDetails`, T10 intake UI, T11 details UI), status flow waiting_input→in_progress→complete→closed forward-only (T4 `nextStatus`, T7, T11; close behind confirm), price model with fixed/custom pricing + flat 20 delivery (T3 seed, T4, T11), garment checklist with needs_ironing/special_care informational flags (T3 `order_garments`, T11), walk-in-not-saved rule (T7 intake never inserts customers, T10 hint), duplicate-name disambiguation (T10 suggestions show location/phone/last order), English-only (no i18n anywhere), branding from `./icon` (T7 window icon, T8 header logo, T14 installer icon), backup on launch + manual (T6, T7, T13), reports (T5, T13), editable fixed prices (T13), installer that preserves DB on uninstall (T14). Roles = future scope, no task, intentional.
+- Spec coverage: two-phase flow (T7 `orders:intake`/`orders:saveDetails`, T10 intake UI, T11 details UI), status flow waiting_input→in_progress→complete→closed forward-only (T4 `nextStatus`, T7, T11; close behind confirm), price model with fixed/custom pricing + flat 20 delivery (T3 seed, T4, T11), garment checklist with counts and special_care flag, required at detail save, no iron flag (T3 `order_garments`, T11), walk-in-not-saved rule (T7 intake never inserts customers, T10 hint), duplicate-name disambiguation (T10 suggestions show location/phone/last order), English-only (no i18n anywhere), branding from `./icon` (T7 window icon, T8 header logo, T14 installer icon), backup on launch + manual (T6, T7, T13), reports (T5, T13), editable fixed prices (T13), installer that preserves DB on uninstall (T14). Roles = future scope, no task, intentional.
 - No placeholders: every code step has complete code; T8 placeholder screens exist only to compile and are each replaced by a named later task.
 - Type consistency: `window.api` (T7) matches all screen call sites; `Screen` union with `orderDetails.orderId` (T8) matches T11 usage; `pricing: 'fixed' | 'custom'` drives readonly price inputs in T11 and the Settings filter in T13; statuses everywhere match the `OrderStatus` union.
