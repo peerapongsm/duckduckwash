@@ -22,6 +22,8 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
   const [selected, setSelected] = useState<number[]>([])
   const [delivery, setDelivery] = useState(false)
   const [saving, setSaving] = useState(false)
+  const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
+  const [orderDate, setOrderDate] = useState(today)
 
   useEffect(() => {
     window.api.services.list().then((s) => setServices(s as Service[]))
@@ -57,7 +59,9 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
         customer_contact: contact.trim() || null,
         is_delivery: delivery,
         service_ids: selected,
-        notes: null
+        notes: null,
+        // only backdate when the picked day isn't today, so normal orders keep their real time
+        created_at: orderDate && orderDate !== today ? orderDate : null
       })
       go({ name: 'home' })
     } catch (err) {
@@ -133,6 +137,17 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
         />
         <span>🛵 Delivery</span>
       </label>
+
+      <div className="flex flex-col gap-1 rounded-box bg-base-200/70 px-4 py-3">
+        <span className="text-sm opacity-70">📅 Order date — leave as today for new orders</span>
+        <input
+          type="date"
+          className="input input-bordered input-lg w-full"
+          max={today}
+          value={orderDate}
+          onChange={(e) => setOrderDate(e.target.value)}
+        />
+      </div>
 
       <div className="flex gap-2">
         <button className="btn btn-lg flex-1" onClick={() => go({ name: 'home' })}>

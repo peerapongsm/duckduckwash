@@ -27,6 +27,28 @@ describe('openDb', () => {
     expect(o.total).toBe(0)
   })
 
+  it('adds the wearer column to pre-v1.0.3 order_garments, defaulting existing rows', () => {
+    const path = join(mkdtempSync(join(tmpdir(), 'ddw-')), 'old.db')
+    const old = new Database(path)
+    old.exec(`
+      CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_name TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'waiting_input', total REAL NOT NULL DEFAULT 0);
+      CREATE TABLE order_garments (
+        id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL, garment TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1, special_care INTEGER NOT NULL DEFAULT 0
+      );
+    `)
+    old.prepare("INSERT INTO order_garments (order_id, garment) VALUES (1, 'Shirt')").run()
+    old.close()
+
+    const db = openDb(path)
+    const cols = (db.pragma('table_info(order_garments)') as { name: string }[]).map((x) => x.name)
+    expect(cols).toContain('wearer')
+    const g = db.prepare('SELECT wearer FROM order_garments').get() as { wearer: string }
+    expect(g.wearer).toBe('female')
+    db.close()
+  })
+
   it('migrates v1.0.0 phone columns to contact, keeping data', () => {
     const path = join(mkdtempSync(join(tmpdir(), 'ddw-')), 'old.db')
     const old = new Database(path)

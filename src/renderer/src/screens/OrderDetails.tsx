@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { JSX } from 'react'
 import type { Screen } from '../App'
-import type { Order, OrderGarment } from '../../../shared/types'
+import type { Order, OrderGarment, Wearer } from '../../../shared/types'
 
 interface ItemRow {
   id: number
@@ -19,21 +19,53 @@ const SERVICE_LABELS: Record<string, string> = {
   iron: 'Iron',
   dry_clean: 'Dry clean'
 }
-const GARMENT_PRESETS = ['Shirt', 'Pants', 'Shorts', 'Dress', 'Skirt', 'Blouse', 'Jacket', 'Bras', 'Underwear']
+// Per-wearer clothing types, prefilled from the aunt's "PEE cloth type" spreadsheet
+// (columns MAN / LADY / KID UNISEX). Bedding + towels sit under MAN as in the sheet.
+const WEARER_PRESETS: Record<Wearer, string[]> = {
+  male: ['SHIRTS-S', 'SHIRTS-L', 'POLO', 'POLO-L', 'TSHIRTS', 'TSHIRTS-L', 'JACKET', 'SWEATER', 'U/SHIRTS', 'JEANS', 'SHORTS', 'TROUSERS', 'U/PANTS', 'SOCKS', 'BOXERS', 'HANDKERCHIEF', 'SARONG', 'LONGDRESS', 'TOWEL-L', 'TOWEL-M', 'TOWEL-S', 'BEDSHEET', 'BLANKET', 'DUVET', 'PILLOW CASE', 'BLANKET COVER'],
+  female: ['BLOUSE', 'BLOUSE-L', 'JACKET', 'SKIRT', 'SKIRT-L', 'DRESS', 'JUMPSUIT', 'TSHIRTS-S', 'TSHIRTS-L', 'U/SHIRTS', 'TROUSERS', 'JEANS', 'SHORTS', 'BRA', 'U/PANTS', 'SOCKS', 'SCARF', 'LONGDRESS'],
+  child: ['TSHIRTS', 'SHIRTS', 'SHORTS', 'TROUSERS', 'BLOUSE', 'SKIRT', 'DRESS', 'TOWEL', 'U/PANTS', 'SOCKS']
+}
+const PRESET_KEYS = new Set(Object.values(WEARER_PRESETS).flat().map((g) => g.toLowerCase()))
+const WEARERS: { key: Wearer; label: string }[] = [
+  { key: 'male', label: '👨 Male' },
+  { key: 'female', label: '👩 Female' },
+  { key: 'child', label: '🧒 Child' }
+]
 
-interface GarmentRow { garment: string; quantity: number; special_care: boolean }
+interface GarmentRow { garment: string; quantity: number; special_care: boolean; wearer: Wearer }
+interface Cell { quantity: number; special_care: boolean }
+
+const cellKey = (w: Wearer, g: string): string => `${w}|||${g}`
 
 export default function OrderDetails({ orderId, go }: { orderId: number; go: (s: Screen) => void }): JSX.Element {
   const [order, setOrder] = useState<Order | null>(null)
   const [items, setItems] = useState<ItemRow[]>([])
-  const [garments, setGarments] = useState<GarmentRow[]>([])
+  // extra garment names beyond the per-wearer presets (custom-added or from old orders)
+  const [extraTypes, setExtraTypes] = useState<string[]>([])
+  const [cells, setCells] = useState<Record<string, Cell>>({})
   const [saving, setSaving] = useState(false)
-  const [knownTypes, setKnownTypes] = useState<string[]>([])
   const [customType, setCustomType] = useState('')
   const [delivery, setDelivery] = useState(false)
 
+  // add names that aren't already a preset or a known extra (case-insensitive)
+  function addExtras(names: string[]): void {
+    setExtraTypes((cur) => {
+      const seen = new Set([...PRESET_KEYS, ...cur.map((t) => t.toLowerCase())])
+      const out = [...cur]
+      for (const t of names) {
+        const k = t.toLowerCase()
+        if (!seen.has(k)) {
+          seen.add(k)
+          out.push(t)
+        }
+      }
+      return out
+    })
+  }
+
   useEffect(() => {
-    window.api.garments.types().then((t) => setKnownTypes(t as string[]))
+    window.api.garments.types().then((t) => addExtras(t as string[]))
   }, [])
 
   useEffect(() => {
@@ -42,9 +74,12 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       setOrder(r.order)
       setDelivery(r.order.is_delivery === 1)
       setItems(r.items.map((i) => ({ ...i, unit_price: i.unit_price ?? i.default_price })))
-      setGarments(r.garments.map((g) => ({
-        garment: g.garment, quantity: g.quantity, special_care: g.special_care === 1
-      })))
+      const c: Record<string, Cell> = {}
+      for (const g of r.garments)
+        c[cellKey(g.wearer ?? 'female', g.garment)] = { quantity: g.quantity, special_care: g.special_care === 1 }
+      setCells(c)
+      // make sure any non-preset garment already on this order shows up as a row
+      addExtras(r.garments.map((g) => g.garment))
     })
   }, [orderId])
 
@@ -53,42 +88,37 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
     [items]
   )
 
+  // every cell with a quantity becomes a garment row to save
+  const filledGarments = useMemo<GarmentRow[]>(() => {
+    const out: GarmentRow[] = []
+    for (const [k, v] of Object.entries(cells)) {
+      if (v.quantity >= 1) {
+        const [wearer, garment] = k.split('|||')
+        out.push({ garment, quantity: v.quantity, special_care: v.special_care, wearer: wearer as Wearer })
+      }
+    }
+    return out
+  }, [cells])
+
   const valid =
     items.every((i) => (i.quantity ?? 0) > 0 && (i.unit_price ?? 0) > 0) &&
-    garments.length > 0 &&
-    garments.every((g) => g.quantity >= 1)
+    filledGarments.length > 0
 
   function updItem(id: number, patch: Partial<ItemRow>): void {
     setItems(items.map((i) => (i.id === id ? { ...i, ...patch } : i)))
   }
-  // presets first, then every name ever used on past orders (deduped, case-insensitive)
-  const garmentButtons = useMemo(() => {
-    const seen = new Set(GARMENT_PRESETS.map((p) => p.toLowerCase()))
-    const extras = knownTypes.filter((t) => {
-      const k = t.toLowerCase()
-      if (seen.has(k)) return false
-      seen.add(k)
-      return true
+  function setCell(w: Wearer, g: string, patch: Partial<Cell>): void {
+    const k = cellKey(w, g)
+    setCells((cur) => {
+      const prev = cur[k] ?? { quantity: 0, special_care: false }
+      return { ...cur, [k]: { ...prev, ...patch } }
     })
-    return [...GARMENT_PRESETS, ...extras]
-  }, [knownTypes])
-
-  function addGarment(g: string): void {
-    const idx = garments.findIndex((r) => r.garment.toLowerCase() === g.toLowerCase())
-    if (idx >= 0) {
-      setGarments(garments.map((r, i) => (i === idx ? { ...r, quantity: r.quantity + 1 } : r)))
-    } else {
-      setGarments([...garments, { garment: g, quantity: 1, special_care: false }])
-    }
   }
   function addCustomGarment(): void {
     const g = customType.trim()
     if (!g) return
-    addGarment(g)
+    addExtras([g])
     setCustomType('')
-  }
-  function updGarment(idx: number, patch: Partial<GarmentRow>): void {
-    setGarments(garments.map((g, i) => (i === idx ? { ...g, ...patch } : g)))
   }
 
   async function save(): Promise<void> {
@@ -98,7 +128,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         order_id: orderId,
         is_delivery: delivery,
         items: items.map((i) => ({ item_id: i.id, quantity: i.quantity!, unit_price: i.unit_price! })),
-        garments
+        garments: filledGarments
       })
       go({ name: 'orders' })
     } catch (err) {
@@ -144,42 +174,81 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         </div>
       ))}
 
-      <div className="font-display text-xl font-semibold">Garments <span className="text-base font-normal opacity-60">— what is in this order?</span></div>
-      <div className="flex flex-wrap gap-2">
-        {garmentButtons.map((g) => (
-          <button key={g} className="btn btn-outline" onClick={() => addGarment(g)}>+ {g}</button>
-        ))}
+      <div className="font-display text-xl font-semibold">
+        Garments <span className="text-base font-normal opacity-60">— type how many of each</span>
       </div>
       <div className="flex gap-2">
         <input
           className="input input-bordered flex-1"
-          placeholder="Other garment — type it (saved for next time)"
+          placeholder="Add another clothing type (e.g. Towel)"
           value={customType}
           onChange={(e) => setCustomType(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') addCustomGarment() }}
         />
         <button className="btn btn-outline" disabled={!customType.trim()} onClick={addCustomGarment}>+ Add</button>
       </div>
-      {garments.map((g, idx) => (
-        <div key={idx} className="flex items-center gap-3 rounded-box bg-base-100 p-3 shadow-soft">
-          <span className="flex-1">{g.garment}</span>
-          <input
-            type="number" min="1"
-            className="input input-bordered w-20 text-right"
-            value={g.quantity}
-            onChange={(e) => updGarment(idx, { quantity: Number(e.target.value) || 1 })}
-          />
-          <label className="label cursor-pointer gap-1">
-            <input
-              type="checkbox" className="checkbox checkbox-warning"
-              checked={g.special_care}
-              onChange={(e) => updGarment(idx, { special_care: e.target.checked })}
-            />
-            special care
-          </label>
-          <button className="btn btn-ghost btn-sm" onClick={() => setGarments(garments.filter((_, i2) => i2 !== idx))}>✕</button>
-        </div>
-      ))}
+
+      {WEARERS.map((w) => {
+        const count = filledGarments
+          .filter((fg) => fg.wearer === w.key)
+          .reduce((s, fg) => s + fg.quantity, 0)
+        // preset rows for this wearer, plus any extra/legacy garment it already has
+        const seen = new Set<string>()
+        const rows: string[] = []
+        for (const g of [...WEARER_PRESETS[w.key], ...extraTypes]) {
+          const k = g.toLowerCase()
+          if (!seen.has(k)) { seen.add(k); rows.push(g) }
+        }
+        for (const key of Object.keys(cells)) {
+          const [cw, g] = key.split('|||')
+          if (cw === w.key && !seen.has(g.toLowerCase())) { seen.add(g.toLowerCase()); rows.push(g) }
+        }
+        return (
+          <details
+            key={w.key}
+            open={w.key === 'male'}
+            className="collapse collapse-arrow rounded-box bg-base-100 shadow-soft"
+          >
+            <summary className="collapse-title font-display flex items-center gap-2 text-lg font-semibold">
+              {w.label}
+              {count > 0 && <span className="badge badge-primary">{count}</span>}
+            </summary>
+            <div className="collapse-content">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {rows.map((g) => {
+                  const c = cells[cellKey(w.key, g)]
+                  const qty = c?.quantity ?? 0
+                  return (
+                    <div
+                      key={g}
+                      className={`flex items-center gap-2 rounded-box px-3 py-2 ${qty > 0 ? 'bg-base-200' : ''}`}
+                    >
+                      <span className="flex-1">{g}</span>
+                      {qty > 0 && (
+                        <label className="label cursor-pointer gap-1 p-0" title="special care">
+                          <input
+                            type="checkbox" className="checkbox checkbox-warning checkbox-sm"
+                            checked={c?.special_care ?? false}
+                            onChange={(e) => setCell(w.key, g, { special_care: e.target.checked })}
+                          />
+                          <span className="text-xs opacity-70">care</span>
+                        </label>
+                      )}
+                      <input
+                        type="number" min="0"
+                        className="input input-bordered w-20 text-right"
+                        placeholder="0"
+                        value={qty || ''}
+                        onChange={(e) => setCell(w.key, g, { quantity: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </details>
+        )
+      })}
 
       <label className="label cursor-pointer justify-start gap-3 rounded-box bg-base-200/70 px-4">
         <input

@@ -6,6 +6,8 @@ export type ServiceKey =
   | 'iron'
   | 'dry_clean'
 
+export type Wearer = 'male' | 'female' | 'child'
+
 export interface Customer {
   id: number
   name: string
@@ -52,6 +54,7 @@ export interface OrderGarment {
   garment: string
   quantity: number
   special_care: number
+  wearer: Wearer
 }
 
 // phase 1: drop-off intake
@@ -63,6 +66,8 @@ export interface OrderIntake {
   is_delivery: boolean
   service_ids: number[]
   notes: string | null
+  // optional backdate (YYYY-MM-DD) for entering old orders; null = now
+  created_at: string | null
 }
 
 // phase 2: detail input
@@ -76,6 +81,7 @@ export interface GarmentInput {
   garment: string
   quantity: number
   special_care: boolean
+  wearer: Wearer
 }
 
 export interface OrderDetailsInput {

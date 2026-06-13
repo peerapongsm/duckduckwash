@@ -1,8 +1,10 @@
-import { ipcMain, shell } from 'electron'
+import { ipcMain, shell, dialog } from 'electron'
+import { writeFile } from 'fs/promises'
 import type Database from 'better-sqlite3'
 import { computeOrderTotal } from './logic/pricing'
 import { nextStatus } from './logic/status'
 import { rangeReport } from './logic/reports'
+import { buildReportWorkbook } from './logic/reportExport'
 import { backupDb } from './backup'
 import type { OrderIntake, OrderDetailsInput, OrderStatus } from '../shared/types'
 
@@ -30,13 +32,17 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
   ipcMain.handle('orders:intake', (_e, input: OrderIntake) => {
     if (!input.customer_name?.trim()) throw new Error('customer name required')
     if (input.service_ids.length === 0) throw new Error('pick at least one service')
+    // optional backdate for old orders; noon localtime keeps the stored format consistent
+    const createdAt = input.created_at && /^\d{4}-\d{2}-\d{2}$/.test(input.created_at)
+      ? `${input.created_at} 12:00:00`
+      : null
     const tx = db.transaction(() => {
       const orderId = db.prepare(
-        `INSERT INTO orders (customer_id, customer_name, customer_location, customer_contact, is_delivery, notes)
-         VALUES (?,?,?,?,?,?)`
+        `INSERT INTO orders (customer_id, customer_name, customer_location, customer_contact, is_delivery, notes, created_at)
+         VALUES (?,?,?,?,?,?, COALESCE(?, datetime('now','localtime')))`
       ).run(
         input.customer_id, input.customer_name.trim(), input.customer_location,
-        input.customer_contact, input.is_delivery ? 1 : 0, input.notes
+        input.customer_contact, input.is_delivery ? 1 : 0, input.notes, createdAt
       ).lastInsertRowid
       const insItem = db.prepare('INSERT INTO order_items (order_id, service_id) VALUES (?,?)')
       for (const sid of input.service_ids) insItem.run(orderId, sid)
@@ -61,10 +67,12 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
 
       db.prepare('DELETE FROM order_garments WHERE order_id=?').run(input.order_id)
       const insG = db.prepare(
-        'INSERT INTO order_garments (order_id, garment, quantity, special_care) VALUES (?,?,?,?)'
+        'INSERT INTO order_garments (order_id, garment, quantity, special_care, wearer) VALUES (?,?,?,?,?)'
       )
+      const wearers = ['male', 'female', 'child']
       for (const g of input.garments)
-        insG.run(input.order_id, g.garment, g.quantity, g.special_care ? 1 : 0)
+        insG.run(input.order_id, g.garment, g.quantity, g.special_care ? 1 : 0,
+          wearers.includes(g.wearer) ? g.wearer : 'female')
 
       const newStatus = order.status === 'waiting_input' ? 'in_progress' : order.status
       db.prepare('UPDATE orders SET total=?, status=?, is_delivery=? WHERE id=?')
@@ -133,6 +141,17 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
     (db.prepare('SELECT value FROM settings WHERE key=?').get(key) as { value: string } | undefined)?.value ?? null)
 
   ipcMain.handle('reports:range', (_e, from: string, to: string) => rangeReport(db, from, to))
+
+  ipcMain.handle('reports:export', async (_e, from: string, to: string) => {
+    const res = await dialog.showSaveDialog({
+      title: 'Export report',
+      defaultPath: `DuckDuckWash report ${from} to ${to}.xlsx`,
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }]
+    })
+    if (res.canceled || !res.filePath) return null
+    await writeFile(res.filePath, await buildReportWorkbook(db, from, to))
+    return res.filePath
+  })
 
   ipcMain.handle('home:today', () => {
     const d = new Date()

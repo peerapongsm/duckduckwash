@@ -1,6 +1,6 @@
 {
   "name": "laundry-care",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "example.com",
@@ -28,7 +28,8 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@fontsource/fredoka": "^5.2.10",
     "@fontsource/nunito": "^5.2.7",
-    "better-sqlite3": "^12.10.0"
+    "better-sqlite3": "^12.10.0",
+    "exceljs": "^4.4.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",

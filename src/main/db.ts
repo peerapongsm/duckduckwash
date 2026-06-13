@@ -47,7 +47,8 @@ export function openDb(path: string): Database.Database {
       order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
       garment TEXT NOT NULL,
       quantity INTEGER NOT NULL DEFAULT 1,
-      special_care INTEGER NOT NULL DEFAULT 0
+      special_care INTEGER NOT NULL DEFAULT 0,
+      wearer TEXT NOT NULL DEFAULT 'female'
     );
     CREATE TABLE IF NOT EXISTS expenses (
       id INTEGER PRIMARY KEY,
@@ -66,6 +67,13 @@ export function openDb(path: string): Database.Database {
   }
   renameColumn('customers', 'phone', 'contact')
   renameColumn('orders', 'customer_phone', 'customer_contact')
+
+  // v1.0.3 added per-garment wearer (male/female/child) for sorting
+  const addColumn = (table: string, col: string, def: string): void => {
+    const cols = db.pragma(`table_info(${table})`) as { name: string }[]
+    if (!cols.some((c) => c.name === col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${def}`)
+  }
+  addColumn('order_garments', 'wearer', "wearer TEXT NOT NULL DEFAULT 'female'")
 
   const seed = db.transaction(() => {
     const ins = db.prepare(

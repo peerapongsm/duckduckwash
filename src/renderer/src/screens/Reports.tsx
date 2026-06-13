@@ -24,6 +24,7 @@ export default function Reports(): JSX.Element {
   const [to, setTo] = useState(presets[1].to)
   const [report, setReport] = useState<RangeReport | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     if (!from || !to) return
@@ -35,6 +36,18 @@ export default function Reports(): JSX.Element {
     setError(null)
     window.api.reports.range(from, to).then((r) => setReport(r as RangeReport))
   }, [from, to])
+
+  async function exportXlsx(): Promise<void> {
+    setExporting(true)
+    try {
+      const path = await window.api.reports.export(from, to)
+      if (path) alert('Saved to:\n' + path)
+    } catch (err) {
+      alert('Export failed: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const max = Math.max(1, ...(report?.buckets.map((b) => b.revenue) ?? [1]))
   // show at most ~15 axis labels however long the range is
@@ -78,6 +91,13 @@ export default function Reports(): JSX.Element {
           <input type="date" className="input input-bordered shadow-soft" value={to} min={from}
             onChange={(e) => setTo(e.target.value)} />
         </div>
+        <button
+          className="btn btn-secondary font-display font-medium shadow-soft"
+          disabled={!report || !!error || exporting}
+          onClick={exportXlsx}
+        >
+          {exporting ? '⏳ Exporting…' : '📄 Export .xlsx'}
+        </button>
       </div>
 
       {error && <div className="rounded-box bg-error/10 p-4 text-error">{error}</div>}
