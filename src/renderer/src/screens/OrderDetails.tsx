@@ -47,6 +47,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [saving, setSaving] = useState(false)
   const [customType, setCustomType] = useState('')
   const [delivery, setDelivery] = useState(false)
+  const [surchargePct, setSurchargePct] = useState(0)
 
   // add names that aren't already a preset or a known extra (case-insensitive)
   function addExtras(names: string[]): void {
@@ -73,6 +74,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       const r = res as { order: Order; items: ItemRow[]; garments: OrderGarment[] }
       setOrder(r.order)
       setDelivery(r.order.is_delivery === 1)
+      setSurchargePct(r.order.surcharge_pct ?? 0)
       setItems(r.items.map((i) => ({ ...i, unit_price: i.unit_price ?? i.default_price })))
       const c: Record<string, Cell> = {}
       for (const g of r.garments)
@@ -83,10 +85,11 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
     })
   }, [orderId])
 
-  const total = useMemo(
+  const subtotal = useMemo(
     () => items.reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0),
     [items]
   )
+  const total = useMemo(() => subtotal * (1 + (surchargePct || 0) / 100), [subtotal, surchargePct])
 
   // every cell with a quantity becomes a garment row to save
   const filledGarments = useMemo<GarmentRow[]>(() => {
@@ -127,6 +130,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       await window.api.orders.saveDetails({
         order_id: orderId,
         is_delivery: delivery,
+        surcharge_pct: surchargePct || 0,
         items: items.map((i) => ({ item_id: i.id, quantity: i.quantity!, unit_price: i.unit_price! })),
         garments: filledGarments
       })
@@ -260,9 +264,25 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         <span>🛵 Delivery — turn off if the customer picks up instead</span>
       </label>
 
+      <div className="flex flex-col gap-1 rounded-box bg-base-200/70 px-4 py-3">
+        <span className="text-sm opacity-70">⚡ Urgent surcharge % — leave 0 for normal orders</span>
+        <input
+          type="number" min="0" step="any"
+          className="input input-bordered w-full"
+          placeholder="0"
+          value={surchargePct || ''}
+          onChange={(e) => setSurchargePct(Math.max(0, Number(e.target.value) || 0))}
+        />
+      </div>
+
       <div className="rounded-box border-2 border-primary/50 bg-primary/15 p-4 text-right shadow-soft">
+        {surchargePct > 0 && (
+          <div className="text-sm opacity-70">
+            Subtotal {subtotal.toLocaleString()} ฿ + {surchargePct}% urgent
+          </div>
+        )}
         <span className="mr-3 align-middle opacity-60">Total</span>
-        <span className="font-display align-middle text-5xl font-semibold">฿ {total.toLocaleString()}</span>
+        <span className="font-display align-middle text-5xl font-semibold">฿ {Math.round(total).toLocaleString()}</span>
       </div>
       <div className="flex gap-2">
         <button className="btn btn-lg flex-1" onClick={() => go({ name: 'orders' })}>Cancel</button>
