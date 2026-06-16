@@ -81,9 +81,14 @@ export function openDb(path: string): Database.Database {
     )
     ins.run('wash_dry_fold', 'kg', 'fixed', 150)
     ins.run('wash_dry_fold_iron', 'kg', 'fixed', 200)
-    ins.run('iron', 'item', 'custom', null)
+    ins.run('iron', 'item', 'custom', 40)
     ins.run('dry_clean', 'item', 'custom', null)
   })
   seed()
+
+  // v1.0.4: iron now has a default price of 40 (still editable per order).
+  // INSERT OR IGNORE above won't touch an iron row that already exists with NULL.
+  db.prepare("UPDATE services SET default_price=40 WHERE key='iron' AND default_price IS NULL").run()
+
   return db
 }

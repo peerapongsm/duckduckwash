@@ -14,7 +14,7 @@ describe('openDb', () => {
     expect(services).toEqual([
       { key: 'wash_dry_fold', unit: 'kg', pricing: 'fixed', default_price: 150 },
       { key: 'wash_dry_fold_iron', unit: 'kg', pricing: 'fixed', default_price: 200 },
-      { key: 'iron', unit: 'item', pricing: 'custom', default_price: null },
+      { key: 'iron', unit: 'item', pricing: 'custom', default_price: 40 },
       { key: 'dry_clean', unit: 'item', pricing: 'custom', default_price: null }
     ])
   })
@@ -46,6 +46,22 @@ describe('openDb', () => {
     expect(cols).toContain('wearer')
     const g = db.prepare('SELECT wearer FROM order_garments').get() as { wearer: string }
     expect(g.wearer).toBe('female')
+    db.close()
+  })
+
+  it('sets iron default_price to 40 on DBs where it was null', () => {
+    const path = join(mkdtempSync(join(tmpdir(), 'ddw-')), 'old.db')
+    const old = new Database(path)
+    old.exec(`CREATE TABLE services (
+      id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, unit TEXT NOT NULL,
+      pricing TEXT NOT NULL, default_price REAL, active INTEGER NOT NULL DEFAULT 1
+    );`)
+    old.prepare("INSERT INTO services (key, unit, pricing, default_price) VALUES ('iron','item','custom',NULL)").run()
+    old.close()
+
+    const db = openDb(path)
+    const iron = db.prepare("SELECT default_price FROM services WHERE key='iron'").get() as { default_price: number }
+    expect(iron.default_price).toBe(40)
     db.close()
   })
 
