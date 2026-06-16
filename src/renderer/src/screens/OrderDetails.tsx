@@ -45,7 +45,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [extraTypes, setExtraTypes] = useState<string[]>([])
   const [cells, setCells] = useState<Record<string, Cell>>({})
   const [saving, setSaving] = useState(false)
-  const [customType, setCustomType] = useState('')
+  const [drafts, setDrafts] = useState<Record<Wearer, string>>({ male: '', female: '', child: '' })
   const [delivery, setDelivery] = useState(false)
   const [surchargePct, setSurchargePct] = useState(0)
   const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
@@ -120,11 +120,11 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       return { ...cur, [k]: { ...prev, ...patch } }
     })
   }
-  function addCustomGarment(): void {
-    const g = customType.trim()
+  function addSectionType(w: Wearer): void {
+    const g = drafts[w].trim()
     if (!g) return
     addExtras([g])
-    setCustomType('')
+    setDrafts((d) => ({ ...d, [w]: '' }))
   }
 
   async function save(): Promise<void> {
@@ -196,17 +196,6 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       <div className="font-display text-xl font-semibold">
         Garments <span className="text-base font-normal opacity-60">— type how many of each</span>
       </div>
-      <div className="flex gap-2">
-        <input
-          className="input input-bordered flex-1"
-          placeholder="Add another clothing type (e.g. Towel)"
-          value={customType}
-          onChange={(e) => setCustomType(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') addCustomGarment() }}
-        />
-        <button className="btn btn-outline" disabled={!customType.trim()} onClick={addCustomGarment}>+ Add</button>
-      </div>
-
       {WEARERS.map((w) => {
         const count = filledGarments
           .filter((fg) => fg.wearer === w.key)
@@ -270,6 +259,20 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
                     </div>
                   )
                 })}
+              </div>
+              <div className="mt-3 flex gap-2">
+                <input
+                  className="input input-bordered input-sm flex-1"
+                  placeholder="Other clothing type (e.g. headband)"
+                  value={drafts[w.key]}
+                  onChange={(e) => setDrafts((d) => ({ ...d, [w.key]: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') addSectionType(w.key) }}
+                />
+                <button
+                  className="btn btn-outline btn-sm"
+                  disabled={!drafts[w.key].trim()}
+                  onClick={() => addSectionType(w.key)}
+                >+ Add</button>
               </div>
             </div>
           </details>
