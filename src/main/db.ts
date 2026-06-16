@@ -32,6 +32,7 @@ export function openDb(path: string): Database.Database {
       status TEXT NOT NULL DEFAULT 'waiting_input',
       is_delivery INTEGER NOT NULL DEFAULT 0,
       total REAL NOT NULL DEFAULT 0,
+      surcharge_pct REAL NOT NULL DEFAULT 0,
       notes TEXT
     );
     CREATE TABLE IF NOT EXISTS order_items (
@@ -74,6 +75,8 @@ export function openDb(path: string): Database.Database {
     if (!cols.some((c) => c.name === col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${def}`)
   }
   addColumn('order_garments', 'wearer', "wearer TEXT NOT NULL DEFAULT 'female'")
+  // v1.0.4: per-order urgent surcharge percentage
+  addColumn('orders', 'surcharge_pct', 'surcharge_pct REAL NOT NULL DEFAULT 0')
 
   const seed = db.transaction(() => {
     const ins = db.prepare(

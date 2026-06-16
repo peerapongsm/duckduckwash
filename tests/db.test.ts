@@ -49,6 +49,14 @@ describe('openDb', () => {
     db.close()
   })
 
+  it('adds surcharge_pct to orders defaulting to 0', () => {
+    const db = openDb(':memory:')
+    db.prepare("INSERT INTO orders (customer_name) VALUES ('walkin')").run()
+    const o = db.prepare('SELECT surcharge_pct FROM orders').get() as { surcharge_pct: number }
+    expect(o.surcharge_pct).toBe(0)
+    db.close()
+  })
+
   it('sets iron default_price to 40 on DBs where it was null', () => {
     const path = join(mkdtempSync(join(tmpdir(), 'ddw-')), 'old.db')
     const old = new Database(path)
