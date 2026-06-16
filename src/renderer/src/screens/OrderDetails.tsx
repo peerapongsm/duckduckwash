@@ -98,7 +98,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const filledGarments = useMemo<GarmentRow[]>(() => {
     const out: GarmentRow[] = []
     for (const [k, v] of Object.entries(cells)) {
-      if (v.quantity >= 1) {
+      if (v.quantity > 0) {
         const [wearer, garment] = k.split('|||')
         out.push({ garment, quantity: v.quantity, special_care: v.special_care, wearer: wearer as Wearer })
       }
@@ -237,6 +237,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
                 {rows.map((g) => {
                   const c = cells[cellKey(w.key, g)]
                   const qty = c?.quantity ?? 0
+                  const isSocks = g.toLowerCase() === 'socks'
                   return (
                     <div
                       key={g}
@@ -254,11 +255,17 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
                         </label>
                       )}
                       <input
-                        type="number" min="0"
+                        type="number"
+                        min={isSocks ? '0.5' : '0'}
+                        step={isSocks ? '0.5' : '1'}
                         className="input input-bordered w-20 text-right"
                         placeholder="0"
                         value={qty || ''}
-                        onChange={(e) => setCell(w.key, g, { quantity: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+                        onChange={(e) => {
+                          const raw = Number(e.target.value) || 0
+                          const q = isSocks ? Math.max(0, raw) : Math.max(0, Math.floor(raw))
+                          setCell(w.key, g, { quantity: q })
+                        }}
                       />
                     </div>
                   )
