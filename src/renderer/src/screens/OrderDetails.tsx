@@ -48,6 +48,8 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [customType, setCustomType] = useState('')
   const [delivery, setDelivery] = useState(false)
   const [surchargePct, setSurchargePct] = useState(0)
+  const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
+  const [orderDate, setOrderDate] = useState('')
 
   // add names that aren't already a preset or a known extra (case-insensitive)
   function addExtras(names: string[]): void {
@@ -75,6 +77,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       setOrder(r.order)
       setDelivery(r.order.is_delivery === 1)
       setSurchargePct(r.order.surcharge_pct ?? 0)
+      setOrderDate((r.order.created_at ?? '').slice(0, 10))
       setItems(r.items.map((i) => ({ ...i, unit_price: i.unit_price ?? i.default_price })))
       const c: Record<string, Cell> = {}
       for (const g of r.garments)
@@ -131,6 +134,8 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         order_id: orderId,
         is_delivery: delivery,
         surcharge_pct: surchargePct || 0,
+        created_at:
+          orderDate && orderDate !== (order?.created_at ?? '').slice(0, 10) ? orderDate : null,
         items: items.map((i) => ({ item_id: i.id, quantity: i.quantity!, unit_price: i.unit_price! })),
         garments: filledGarments
       })
@@ -151,6 +156,16 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
         <div className="mt-1 opacity-60">
           {order.customer_location ? `${order.customer_location} · ` : ''}{order.created_at}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1 rounded-box bg-base-200/70 px-4 py-3">
+        <span className="text-sm opacity-70">📅 Order date</span>
+        <input
+          type="date" max={today}
+          className="input input-bordered w-full"
+          value={orderDate}
+          onChange={(e) => setOrderDate(e.target.value)}
+        />
       </div>
 
       <div className="font-display text-xl font-semibold">Services</div>
