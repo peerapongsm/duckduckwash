@@ -13,10 +13,10 @@ files:
 asarUnpack:
   - 'resources/**'
   - '**/node_modules/better-sqlite3/**'
-# Auto-update via GitHub Releases. TODO: set `owner` to your GitHub username.
+# Auto-update via GitHub Releases.
 publish:
   provider: github
-  owner: YOUR_GITHUB_USERNAME
+  owner: peerapongsm
   repo: duckduckwash
 win:
   target:
