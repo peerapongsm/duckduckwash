@@ -1,7 +1,8 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
 import path from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { autoUpdater } from 'electron-updater'
 import icon from '../../resources/icon.png?asset'
 import { openDb } from './db'
 import { registerIpc } from './ipc'
@@ -56,12 +57,33 @@ app.whenReady().then(() => {
   const userData = app.getPath('userData')
   const dbPath = path.join(userData, 'laundry.db')
   const backupDir = path.join(userData, 'backups')
-  const db = openDb(dbPath)
+
+  let db: ReturnType<typeof openDb>
+  try {
+    db = openDb(dbPath)
+  } catch (err) {
+    // Never die silently — a non-technical user just sees the app fail to open.
+    // Show the reason so they can report it.
+    dialog.showErrorBox(
+      'DuckDuckWash could not start',
+      'There was a problem opening the database.\n\n' +
+        (err instanceof Error ? err.message : String(err)) +
+        '\n\nPlease send this message to support.'
+    )
+    app.quit()
+    return
+  }
   app.on('before-quit', () => db.close())
   backupDb(db, backupDir).catch((err) => console.error('startup backup failed:', err))
   registerIpc(db, backupDir)
 
   createWindow()
+
+  // Auto-update from GitHub Releases. Downloads in the background and installs
+  // on next quit — no prompts the aunt has to understand. Packaged builds only.
+  if (!is.dev) {
+    autoUpdater.checkForUpdatesAndNotify().catch((err) => console.error('update check failed:', err))
+  }
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

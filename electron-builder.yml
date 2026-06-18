@@ -13,8 +13,11 @@ files:
 asarUnpack:
   - 'resources/**'
   - '**/node_modules/better-sqlite3/**'
-# local-only app, no update server — disables update-info tasks that crash without a provider
-publish: null
+# Auto-update via GitHub Releases. TODO: set `owner` to your GitHub username.
+publish:
+  provider: github
+  owner: YOUR_GITHUB_USERNAME
+  repo: duckduckwash
 win:
   target:
     - nsis

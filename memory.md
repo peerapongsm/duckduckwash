@@ -1,5 +1,5 @@
 # DuckDuckWash — Memory Log
-**Date:** 2026-06-12 | **Last updated:** 2026-06-16 | **Status: v1.0.4 installer built, awaiting delivery to aunt** (aunt has v1.0.0; v1.0.1–v1.0.4 never sent)
+**Date:** 2026-06-12 | **Last updated:** 2026-06-18 | **Status: v1.0.5 built + launch-verified on branch `fix/v1.0.5-startup-crash-chart-updater`; awaiting GitHub repo owner to publish** (aunt has v1.0.0; v1.0.1–v1.0.4 never worked/sent — v1.0.4 crashed on launch, see below)
 
 ---
 
@@ -80,6 +80,16 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
   - **6b** (commit `6d16ddc`): editable order date on OrderDetails. `orderDate` state initialized from `r.order.created_at`; date picker with `max=today`; saves `created_at` only when changed.
   - **6c** (commit `cf476b9`): SOCKS allow 0.5 quantity. `isSocks` derived from garment name; `filledGarments` threshold changed to `> 0`; step/min 0.5 for socks rows.
   - **6d** (commit `6d59129`): per-section "Other" input replaces shared top-level input. `drafts: Record<Wearer,string>` state; `addSectionType(w)` function; each wearer section has its own input+button. Cross-section behavior preserved (addExtras still adds to extraTypes shown everywhere).
+
+### v1.0.5 — startup-crash fix + chart fix + auto-updater (2026-06-18, branch `fix/v1.0.5-startup-crash-chart-updater`)
+- **ROOT CAUSE of "v1.0.4 won't open" (aunt: double-click shortcut, nothing opens, not in Task Manager):** packaged `better_sqlite3.node` was built for **node ABI (NODE_MODULE_VERSION 137)** but Electron 39 needs **140**. `openDb()` threw at `new Database()` → unhandled rejection → no window. The "ABI seesaw" bit: at v1.0.4 build time `node_modules` held the node-ABI binary (from a prior `npm test`/`rebuild:node`) and `electron-builder` packaged it without rebuilding to Electron ABI. **Reproduced** by launching `release/win-unpacked/DuckDuckWash.exe` directly — every prior "verification" was tests+typecheck+"build clean", the packaged exe was NEVER launched.
+  - **Fix 1 (prevent):** `build:win` script now starts with `npm run rebuild:electron` so the Electron-ABI binary is always what gets packaged. (electron-builder's own @electron/rebuild also runs, now belt-and-suspenders.)
+  - **Fix 2 (never fail silently):** `src/main/index.ts` wraps `openDb()` in try/catch → `dialog.showErrorBox(...)` + `app.quit()`. A non-technical user now sees a reason instead of a dead double-click.
+  - **Verified:** rebuilt `release/DuckDuckWash Setup 1.0.5.exe`, launched win-unpacked exe → window opens, no ABI error.
+- **Revenue chart fix** (`Reports.tsx`): bars used `height: %` but their direct parent wrapper had no defined height (only the `h-48` grandparent did) → every bar collapsed to the 4px `minHeight` stub. Changed track `items-end`→`items-stretch` and wrapper to `... justify-end` so the wrapper fills `h-48` and `%` resolves. CSS-only, no IPC/data change. Bug was version-independent (always broken since range-report chart `92bbc15`).
+- **Auto-updater added (electron-updater + GitHub Releases):** `electron-updater@^6` dep; `src/main/index.ts` calls `autoUpdater.checkForUpdatesAndNotify()` on ready (production only, `.catch`-guarded) — silent background download, install on quit (no prompts for aunt). `electron-builder.yml` `publish: null` → `provider: github, owner: YOUR_GITHUB_USERNAME, repo: duckduckwash`. **Motivation:** aunt keeps asking for features; updater lets us push versions without re-sending installers. Reverses the old "auto-update declined" decision.
+- **STILL TODO before shipping v1.0.5:** (1) set real `owner` in `electron-builder.yml`; (2) create the public GitHub repo `duckduckwash`; (3) `GH_TOKEN` env + `electron-builder --win --publish always` (or `build:win` then upload) so `latest.yml` + exe land in a GitHub Release; (4) install v1.0.5 on aunt's PC once (first unsigned install may still hit SmartScreen — "More info → Run anyway"); subsequent updates auto-install.
+- **Found, not fixed (out of scope):** bundled Fredoka/Nunito fonts (`data:font` URIs) are blocked by renderer CSP `default-src 'self'` → app falls back to system fonts. Cosmetic.
 
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.

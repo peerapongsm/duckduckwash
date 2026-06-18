@@ -118,9 +118,9 @@ export default function Reports(): JSX.Element {
           <div className="mb-3 font-display text-lg font-semibold opacity-70">
             {report.granularity === 'month' ? 'Monthly revenue' : 'Daily revenue'}
           </div>
-          <div className="flex h-48 items-end gap-1">
+          <div className="flex h-48 items-stretch gap-1">
             {report.buckets.map((b, i) => (
-              <div key={b.label} className="group flex flex-1 flex-col items-center gap-1">
+              <div key={b.label} className="group flex flex-1 flex-col items-center justify-end gap-1">
                 <div
                   className="w-full rounded-t-md bg-gradient-to-t from-secondary to-secondary/60 transition-colors group-hover:from-primary group-hover:to-primary/70"
                   style={{ height: `${(b.revenue / max) * 100}%`, minHeight: b.revenue > 0 ? '4px' : '0' }}
