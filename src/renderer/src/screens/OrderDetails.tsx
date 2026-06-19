@@ -47,7 +47,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
   const [saving, setSaving] = useState(false)
   const [drafts, setDrafts] = useState<Record<Wearer, string>>({ male: '', female: '', child: '' })
   const [delivery, setDelivery] = useState(false)
-  const [surchargePct, setSurchargePct] = useState(0)
+  const [surchargeAmount, setSurchargeAmount] = useState(0)
   const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
   const [orderDate, setOrderDate] = useState('')
 
@@ -76,7 +76,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       const r = res as { order: Order; items: ItemRow[]; garments: OrderGarment[] }
       setOrder(r.order)
       setDelivery(r.order.is_delivery === 1)
-      setSurchargePct(r.order.surcharge_pct ?? 0)
+      setSurchargeAmount(r.order.surcharge_amount ?? 0)
       setOrderDate((r.order.created_at ?? '').slice(0, 10))
       setItems(r.items.map((i) => ({ ...i, unit_price: i.unit_price ?? i.default_price })))
       const c: Record<string, Cell> = {}
@@ -92,7 +92,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
     () => items.reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0),
     [items]
   )
-  const total = useMemo(() => subtotal * (1 + (surchargePct || 0) / 100), [subtotal, surchargePct])
+  const total = useMemo(() => subtotal + (surchargeAmount || 0), [subtotal, surchargeAmount])
 
   // every cell with a quantity becomes a garment row to save
   const filledGarments = useMemo<GarmentRow[]>(() => {
@@ -133,7 +133,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       await window.api.orders.saveDetails({
         order_id: orderId,
         is_delivery: delivery,
-        surcharge_pct: surchargePct || 0,
+        surcharge_amount: surchargeAmount || 0,
         created_at:
           orderDate && orderDate !== (order?.created_at ?? '').slice(0, 10) ? orderDate : null,
         items: items.map((i) => ({ item_id: i.id, quantity: i.quantity!, unit_price: i.unit_price! })),
@@ -290,20 +290,20 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       </label>
 
       <div className="flex flex-col gap-1 rounded-box bg-base-200/70 px-4 py-3">
-        <span className="text-sm opacity-70">⚡ Urgent surcharge % — leave 0 for normal orders</span>
+        <span className="text-sm opacity-70">⚡ Urgent surcharge (฿) — leave 0 for normal orders</span>
         <input
           type="number" min="0" step="any"
           className="input input-bordered w-full"
           placeholder="0"
-          value={surchargePct || ''}
-          onChange={(e) => setSurchargePct(Math.max(0, Number(e.target.value) || 0))}
+          value={surchargeAmount || ''}
+          onChange={(e) => setSurchargeAmount(Math.max(0, Number(e.target.value) || 0))}
         />
       </div>
 
       <div className="rounded-box border-2 border-primary/50 bg-primary/15 p-4 text-right shadow-soft">
-        {surchargePct > 0 && (
+        {surchargeAmount > 0 && (
           <div className="text-sm opacity-70">
-            Subtotal {subtotal.toLocaleString()} ฿ + {surchargePct}% urgent
+            Subtotal {subtotal.toLocaleString()} ฿ + {surchargeAmount.toLocaleString()} ฿ urgent
           </div>
         )}
         <span className="mr-3 align-middle opacity-60">Total</span>

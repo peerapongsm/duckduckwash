@@ -32,7 +32,7 @@ export function openDb(path: string): Database.Database {
       status TEXT NOT NULL DEFAULT 'waiting_input',
       is_delivery INTEGER NOT NULL DEFAULT 0,
       total REAL NOT NULL DEFAULT 0,
-      surcharge_pct REAL NOT NULL DEFAULT 0,
+      surcharge_amount REAL NOT NULL DEFAULT 0,
       notes TEXT
     );
     CREATE TABLE IF NOT EXISTS order_items (
@@ -68,6 +68,8 @@ export function openDb(path: string): Database.Database {
   }
   renameColumn('customers', 'phone', 'contact')
   renameColumn('orders', 'customer_phone', 'customer_contact')
+  // v1.0.6: urgent surcharge changed from percentage to flat baht amount
+  renameColumn('orders', 'surcharge_pct', 'surcharge_amount')
 
   // v1.0.3 added per-garment wearer (male/female/child) for sorting
   const addColumn = (table: string, col: string, def: string): void => {
@@ -75,8 +77,8 @@ export function openDb(path: string): Database.Database {
     if (!cols.some((c) => c.name === col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${def}`)
   }
   addColumn('order_garments', 'wearer', "wearer TEXT NOT NULL DEFAULT 'female'")
-  // v1.0.4: per-order urgent surcharge percentage
-  addColumn('orders', 'surcharge_pct', 'surcharge_pct REAL NOT NULL DEFAULT 0')
+  // per-order urgent surcharge, flat baht (pre-v1.0.4 DBs that never had the column)
+  addColumn('orders', 'surcharge_amount', 'surcharge_amount REAL NOT NULL DEFAULT 0')
 
   const seed = db.transaction(() => {
     const ins = db.prepare(

@@ -58,11 +58,11 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
     if (order.status === 'closed') throw new Error('order is closed')
     if (input.garments.length === 0) throw new Error('add at least one garment')
     for (const g of input.garments) if (g.quantity <= 0) throw new Error('garment quantity must be positive')
-    const surchargePct = input.surcharge_pct ?? 0
-    if (surchargePct < 0) throw new Error('surcharge must not be negative')
+    const surchargeAmount = input.surcharge_amount ?? 0
+    if (surchargeAmount < 0) throw new Error('surcharge must not be negative')
     const total = computeOrderTotal(
       input.items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price })),
-      surchargePct
+      surchargeAmount
     )
     // optional date edit; noon localtime matches the backdate convention
     const createdAt = input.created_at && /^\d{4}-\d{2}-\d{2}$/.test(input.created_at)
@@ -83,9 +83,9 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
 
       const newStatus = order.status === 'waiting_input' ? 'in_progress' : order.status
       db.prepare(
-        `UPDATE orders SET total=?, status=?, is_delivery=?, surcharge_pct=?,
+        `UPDATE orders SET total=?, status=?, is_delivery=?, surcharge_amount=?,
          created_at=COALESCE(?, created_at) WHERE id=?`
-      ).run(total, newStatus, input.is_delivery ? 1 : 0, surchargePct, createdAt, input.order_id)
+      ).run(total, newStatus, input.is_delivery ? 1 : 0, surchargeAmount, createdAt, input.order_id)
     })
     tx()
     return total

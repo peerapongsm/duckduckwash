@@ -49,11 +49,11 @@ describe('openDb', () => {
     db.close()
   })
 
-  it('adds surcharge_pct to orders defaulting to 0', () => {
+  it('adds surcharge_amount to orders defaulting to 0', () => {
     const db = openDb(':memory:')
     db.prepare("INSERT INTO orders (customer_name) VALUES ('walkin')").run()
-    const o = db.prepare('SELECT surcharge_pct FROM orders').get() as { surcharge_pct: number }
-    expect(o.surcharge_pct).toBe(0)
+    const o = db.prepare('SELECT surcharge_amount FROM orders').get() as { surcharge_amount: number }
+    expect(o.surcharge_amount).toBe(0)
     db.close()
   })
 

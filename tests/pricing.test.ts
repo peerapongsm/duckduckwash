@@ -20,9 +20,9 @@ describe('computeOrderTotal', () => {
     expect(() => computeOrderTotal([{ quantity: 1, unit_price: 0 }])).toThrow()
   })
 
-  it('applies a whole-order surcharge percentage', () => {
-    expect(computeOrderTotal([{ quantity: 2, unit_price: 100 }], 50)).toBe(300)
-    expect(computeOrderTotal([{ quantity: 2, unit_price: 100 }], 100)).toBe(400)
+  it('adds a flat whole-order surcharge amount', () => {
+    expect(computeOrderTotal([{ quantity: 2, unit_price: 100 }], 50)).toBe(250)
+    expect(computeOrderTotal([{ quantity: 2, unit_price: 100 }], 100)).toBe(300)
   })
 
   it('defaults the surcharge to 0', () => {

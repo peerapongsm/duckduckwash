@@ -36,7 +36,7 @@ export interface Order {
   status: OrderStatus
   is_delivery: number
   total: number
-  surcharge_pct: number
+  surcharge_amount: number
   notes: string | null
 }
 
@@ -88,7 +88,7 @@ export interface GarmentInput {
 export interface OrderDetailsInput {
   order_id: number
   is_delivery: boolean
-  surcharge_pct: number
+  surcharge_amount: number
   // optional date edit (YYYY-MM-DD); null/undefined leaves created_at unchanged
   created_at?: string | null
   items: ItemDetailInput[]
