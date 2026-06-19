@@ -94,6 +94,11 @@ At order creation aunt only picks categories; later she fills in kg (per-kg serv
   - **To push a new feature going forward:** bump version → `npm run build:win` → publish exe+latest.yml to a new (non-draft) GitHub Release. Aunt's app self-updates.
 - **Found, not fixed (out of scope):** bundled Fredoka/Nunito fonts (`data:font` URIs) are blocked by renderer CSP `default-src 'self'` → app falls back to system fonts. Cosmetic.
 
+### v1.0.6 — surcharge flat baht (2026-06-19, shipped on `main`)
+- Only change: urgent surcharge % → flat baht (see Feature 5 above). Commits `990ec93` (feature) + `041fc28` (version bump).
+- **SHIPPED via auto-updater:** built `release/DuckDuckWash Setup 1.0.6.exe` (110MB), **launched `release/win-unpacked/DuckDuckWash.exe` directly → window opens, alive 8s, no ABI crash** (the v1.0.4 verification gap — always launch the packaged exe). Published non-draft GitHub Release `v1.0.6` with dashed `DuckDuckWash-Setup-1.0.6.exe` + `.blockmap` + `latest.yml`; verified draft=false, assets full size, `/releases/latest/download/latest.yml` public. Aunt's app self-updates from v1.0.5 on next quit — no manual send (IF she's actually on v1.0.5 with the updater; if still v1.0.0, needs one manual install first).
+- Release recipe worked clean this time: `gh release create v1.0.6 <dashed-exe> <blockmap> latest.yml --latest` (gh defaults to non-draft, avoids the v1.0.5 draft+incomplete-upload gotcha).
+
 ## 4. Notes
 - User invokes /memory-first each session; works in caveman+pordee terse mode.
 - **Next step: deliver v1.0.1 to aunt.** Distribution: MediaFire blocked by SmartScreen + Chrome Safe Browsing (unsigned exe, zero reputation, bad-rep file host). Advice given: share via Google Drive/OneDrive or USB; first run needs SmartScreen "More info → Run anyway". Code signing cert deemed overkill for one user.
