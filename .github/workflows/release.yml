@@ -52,6 +52,26 @@ jobs:
             echo "Created and pushed $tag."
           fi
 
+      # electron-builder uploads assets concurrently, and each upload creates the
+      # release if it's missing — a race that produced TWO releases for the v1.0.8
+      # tag, splitting latest.yml / exe / blockmap across them and 404-ing the
+      # updater feed. Pre-creating the (non-draft) release here means each upload
+      # finds it and attaches to the one release. Idempotent: skipped if it exists
+      # (e.g. a re-run), and covers the tag-push flow too (tag already present).
+      - name: Pre-create GitHub Release (prevents duplicate-release race)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists — skipping."
+          else
+            gh release create "$tag" --title "$version" --notes "Automated release of $tag."
+            echo "Pre-created release $tag."
+          fi
+
       # rebuild:electron ensures better-sqlite3 is built for Electron's ABI
       # (the v1.0.4 crash was a node-ABI binary shipped to an Electron runtime),
       # then electron-builder builds the NSIS installer and publishes it +
