@@ -7,9 +7,37 @@ const CAT_LABELS: Record<(typeof CATS)[number], string> = {
   supplies: 'Supplies', utilities: 'Utilities', rent: 'Rent', food: 'Food', salary: 'Salary', other: 'Other'
 }
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+]
+
 function localDate(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function shiftMonth(ym: string, delta: number): string {
+  const [y, m] = ym.split('-').map(Number)
+  const d = new Date(y, m - 1 + delta, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function monthLabel(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  return `${MONTH_NAMES[m - 1]} ${y}`
+}
+
+// Bounds for the add-expense date picker so a newly added expense always lands
+// in the month currently being viewed (and never in the future).
+function monthBounds(ym: string): { min: string; max: string; default: string } {
+  const today = localDate()
+  const isCurrent = ym === today.slice(0, 7)
+  const [y, m] = ym.split('-').map(Number)
+  const lastDay = String(new Date(y, m, 0).getDate()).padStart(2, '0')
+  const min = `${ym}-01`
+  const max = isCurrent ? today : `${ym}-${lastDay}`
+  return { min, max, default: isCurrent ? today : min }
 }
 
 interface RowInput {
@@ -20,7 +48,8 @@ interface RowInput {
 const NEW_ROW: RowInput = { category: 'supplies', amount: '', note: '' }
 
 export default function Expenses(): JSX.Element {
-  const month = localDate().slice(0, 7)
+  const currentMonth = localDate().slice(0, 7)
+  const [month, setMonth] = useState(currentMonth)
   const [items, setItems] = useState<Expense[]>([])
   const [rows, setRows] = useState<RowInput[] | null>(null)
   const [date, setDate] = useState(localDate())
@@ -32,7 +61,14 @@ export default function Expenses(): JSX.Element {
   }, [month])
   useEffect(reload, [reload])
 
+  const isCurrentMonth = month === currentMonth
+  const bounds = monthBounds(month)
   const rowsValid = rows !== null && rows.length > 0 && rows.every((r) => Number(r.amount) > 0)
+
+  function openAdd(): void {
+    setDate(bounds.default)
+    setRows([{ ...NEW_ROW }])
+  }
 
   function updRow(idx: number, patch: Partial<RowInput>): void {
     if (rows) setRows(rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)))
@@ -68,13 +104,29 @@ export default function Expenses(): JSX.Element {
 
   return (
     <div className="rise flex flex-col gap-4">
-      <button className="btn btn-primary btn-lg lift self-start rounded-box font-display shadow-soft" onClick={() => setRows([{ ...NEW_ROW }])}>
+      {/* Month navigator — view and edit expenses for any month, not just the current one */}
+      <div className="flex items-center justify-between gap-2 rounded-box bg-base-100 p-2 shadow-soft">
+        <button className="btn btn-ghost btn-lg text-2xl" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month">
+          ←
+        </button>
+        <div className="font-display text-2xl font-semibold">{monthLabel(month)}</div>
+        <button
+          className="btn btn-ghost btn-lg text-2xl"
+          onClick={() => setMonth(shiftMonth(month, 1))}
+          disabled={isCurrentMonth}
+          aria-label="Next month"
+        >
+          →
+        </button>
+      </div>
+
+      <button className="btn btn-primary btn-lg lift self-start rounded-box font-display shadow-soft" onClick={openAdd}>
         ➕ Expense
       </button>
 
       {items.length === 0 && (
         <div className="rounded-box border-2 border-dashed border-base-300 p-10 text-center opacity-50">
-          No expenses recorded this month
+          No expenses for {monthLabel(month)}
         </div>
       )}
 
@@ -93,7 +145,7 @@ export default function Expenses(): JSX.Element {
       {rows && (
         <div className="modal modal-open">
           <div className="modal-box flex max-w-2xl flex-col gap-3">
-            <input type="date" className="input input-bordered input-lg" value={date} onChange={(e) => setDate(e.target.value)} />
+            <input type="date" className="input input-bordered input-lg" value={date} min={bounds.min} max={bounds.max} onChange={(e) => setDate(e.target.value)} />
             {rows.map((r, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 <select className="select select-bordered select-lg" value={r.category}

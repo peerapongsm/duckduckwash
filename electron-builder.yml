@@ -18,6 +18,8 @@ publish:
   provider: github
   owner: peerapongsm
   repo: duckduckwash
+  # Publish as a full (non-draft) release — electron-updater ignores drafts.
+  releaseType: release
 win:
   target:
     - nsis
