@@ -31,6 +31,27 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # A non-draft GitHub Release requires the git tag to already exist. When
+      # this workflow is run via workflow_dispatch (rather than a tag push) the
+      # tag is missing, so create it here from the checked-out commit. Pushing
+      # with GITHUB_TOKEN does NOT retrigger the on:push:tags trigger (GitHub
+      # blocks token-triggered workflow recursion), so there's no loop. Skipped
+      # when the tag already exists (i.e. the normal tag-push flow).
+      - name: Create version tag if missing
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists on origin — skipping."
+          else
+            git tag "$tag"
+            git push origin "$tag"
+            echo "Created and pushed $tag."
+          fi
+
       # rebuild:electron ensures better-sqlite3 is built for Electron's ABI
       # (the v1.0.4 crash was a node-ABI binary shipped to an Electron runtime),
       # then electron-builder builds the NSIS installer and publishes it +

@@ -3,6 +3,7 @@ import { writeFile } from 'fs/promises'
 import type Database from 'better-sqlite3'
 import { computeOrderTotal } from './logic/pricing'
 import { nextStatus } from './logic/status'
+import { listOrders } from './logic/orders'
 import { rangeReport } from './logic/reports'
 import { buildReportWorkbook } from './logic/reportExport'
 import { backupDb } from './backup'
@@ -91,8 +92,10 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
     return total
   })
 
-  ipcMain.handle('orders:list', (_e, status: OrderStatus) =>
-    db.prepare('SELECT * FROM orders WHERE status=? ORDER BY created_at DESC').all(status))
+  // Optional from/to (YYYY-MM-DD) filter on the order's calendar day. Either
+  // bound may be omitted (open-ended); both omitted = every order in the status.
+  ipcMain.handle('orders:list', (_e, status: OrderStatus, from?: string, to?: string) =>
+    listOrders(db, status, from, to))
 
   ipcMain.handle('orders:get', (_e, id: number) => ({
     order: db.prepare('SELECT * FROM orders WHERE id=?').get(id),
