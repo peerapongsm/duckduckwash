@@ -13,7 +13,6 @@ function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
-    fullscreen: true,
     show: false,
     autoHideMenuBar: true,
     icon,
@@ -24,6 +23,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
+    mainWindow.maximize() // fill the screen but keep the title bar (minimize/close)
     mainWindow.show()
   })
 
