@@ -17,21 +17,48 @@ const STATUS_EDGE: Record<OrderStatus, string> = {
   closed: 'border-l-base-300'
 }
 
+function fmt(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// Date-range presets. "All dates" (empty bounds) clears the filter and shows
+// every order in the tab — the default, so current work is never hidden by a date.
+function presetRanges(): { label: string; from: string; to: string }[] {
+  const now = new Date()
+  const today = fmt(now)
+  return [
+    { label: 'All dates', from: '', to: '' },
+    { label: 'Today', from: today, to: today },
+    { label: 'This month', from: fmt(new Date(now.getFullYear(), now.getMonth(), 1)), to: today },
+    { label: 'This year', from: fmt(new Date(now.getFullYear(), 0, 1)), to: today }
+  ]
+}
+
 export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element {
+  const presets = presetRanges()
   const [tab, setTab] = useState<OrderStatus>('waiting_input')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [orders, setOrders] = useState<Order[]>([])
   const [confirm, setConfirm] = useState<{ kind: 'delete' | 'close'; id: number; from: OrderStatus } | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const filtered = from !== '' || to !== ''
+  const invalidRange = from !== '' && to !== '' && from > to
+
   const reload = useCallback(() => {
-    window.api.orders.list(tab).then((r) => setOrders(r as Order[]))
-  }, [tab])
+    if (from !== '' && to !== '' && from > to) {
+      setOrders([]) // start date after end date — show nothing until fixed
+      return
+    }
+    window.api.orders.list(tab, from, to).then((r) => setOrders(r as Order[]))
+  }, [tab, from, to])
   useEffect(reload, [reload])
 
-  async function advance(id: number, from: OrderStatus): Promise<void> {
+  async function advance(id: number, fromStatus: OrderStatus): Promise<void> {
     setBusy(true)
     try {
-      await window.api.orders.advanceStatus(id, from)
+      await window.api.orders.advanceStatus(id, fromStatus)
       setConfirm(null)
       reload()
     } catch (err) {
@@ -67,9 +94,36 @@ export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element
         ))}
       </div>
 
-      {orders.length === 0 && (
+      <div className="flex flex-wrap items-center gap-2 rounded-box bg-base-100 p-3 shadow-soft">
+        <span className="font-display font-medium opacity-60">📅 Date</span>
+        {presets.map((p) => (
+          <button
+            key={p.label}
+            className={`btn btn-sm font-display font-medium ${from === p.from && to === p.to ? 'btn-neutral shadow-soft' : 'btn-ghost bg-base-200'}`}
+            onClick={() => { setFrom(p.from); setTo(p.to) }}
+          >
+            {p.label}
+          </button>
+        ))}
+        <div className="ml-1 flex items-center gap-2">
+          <input type="date" className="input input-bordered input-sm shadow-soft" value={from} max={to || undefined}
+            onChange={(e) => setFrom(e.target.value)} />
+          <span className="opacity-60">to</span>
+          <input type="date" className="input input-bordered input-sm shadow-soft" value={to} min={from || undefined}
+            onChange={(e) => setTo(e.target.value)} />
+        </div>
+        {filtered && (
+          <button className="btn btn-sm btn-ghost" onClick={() => { setFrom(''); setTo('') }}>✕ Clear</button>
+        )}
+      </div>
+
+      {invalidRange && (
+        <div className="rounded-box bg-error/10 p-4 text-error">Start date is after end date</div>
+      )}
+
+      {orders.length === 0 && !invalidRange && (
         <div className="rounded-box border-2 border-dashed border-base-300 p-10 text-center opacity-50">
-          Nothing here right now
+          {filtered ? 'No orders in this date range' : 'Nothing here right now'}
         </div>
       )}
 
