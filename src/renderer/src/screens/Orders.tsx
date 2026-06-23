@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import type { Screen } from '../App'
 import type { Order, OrderStatus } from '../../../shared/types'
+import DataIO from '../components/DataIO'
 
 const TABS: { key: OrderStatus; label: string; icon: string }[] = [
   { key: 'waiting_input', label: 'Waiting input', icon: '📝' },
@@ -82,6 +83,9 @@ export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element
 
   return (
     <div className="rise flex flex-col gap-4">
+      <div className="flex justify-end">
+        <DataIO kind="orders" onImported={reload} />
+      </div>
       <div className="flex flex-wrap gap-2">
         {TABS.map((t) => (
           <button
@@ -157,6 +161,9 @@ export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element
                 Close (paid & picked up)
               </button>
             </>
+          )}
+          {o.status === 'closed' && (
+            <button className="btn btn-lg" disabled={busy} onClick={() => go({ name: 'orderDetails', orderId: o.id })}>Edit</button>
           )}
           {o.status !== 'closed' && (
             <button className="btn btn-ghost" disabled={busy} onClick={() => setConfirm({ kind: 'delete', id: o.id, from: o.status })}>✕</button>

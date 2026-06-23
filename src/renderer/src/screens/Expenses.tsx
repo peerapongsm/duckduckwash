@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import type { Expense } from '../../../shared/types'
+import DataIO from '../components/DataIO'
 
 const CATS = ['supplies', 'utilities', 'rent', 'food', 'salary', 'other'] as const
 const CAT_LABELS: Record<(typeof CATS)[number], string> = {
@@ -120,9 +121,12 @@ export default function Expenses(): JSX.Element {
         </button>
       </div>
 
-      <button className="btn btn-primary btn-lg lift self-start rounded-box font-display shadow-soft" onClick={openAdd}>
-        ➕ Expense
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button className="btn btn-primary btn-lg lift rounded-box font-display shadow-soft" onClick={openAdd}>
+          ➕ Expense
+        </button>
+        <DataIO kind="expenses" onImported={reload} />
+      </div>
 
       {items.length === 0 && (
         <div className="rounded-box border-2 border-dashed border-base-300 p-10 text-center opacity-50">

@@ -1,11 +1,12 @@
 import { ipcMain, shell, dialog } from 'electron'
-import { writeFile } from 'fs/promises'
+import { writeFile, readFile } from 'fs/promises'
 import type Database from 'better-sqlite3'
 import { computeOrderTotal } from './logic/pricing'
 import { nextStatus } from './logic/status'
 import { listOrders } from './logic/orders'
 import { rangeReport } from './logic/reports'
 import { buildReportWorkbook } from './logic/reportExport'
+import { buildEntityWorkbook, importEntityWorkbook, type DataKind } from './logic/dataIO'
 import { backupDb } from './backup'
 import type { OrderIntake, OrderDetailsInput, OrderStatus } from '../shared/types'
 
@@ -56,7 +57,6 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
   ipcMain.handle('orders:saveDetails', (_e, input: OrderDetailsInput) => {
     const order = db.prepare('SELECT * FROM orders WHERE id=?').get(input.order_id) as { is_delivery: number; status: OrderStatus } | undefined
     if (!order) throw new Error('order not found')
-    if (order.status === 'closed') throw new Error('order is closed')
     if (input.garments.length === 0) throw new Error('add at least one garment')
     for (const g of input.garments) if (g.quantity <= 0) throw new Error('garment quantity must be positive')
     const surchargeAmount = input.surcharge_amount ?? 0
@@ -163,6 +163,28 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
     if (res.canceled || !res.filePath) return null
     await writeFile(res.filePath, await buildReportWorkbook(db, from, to))
     return res.filePath
+  })
+
+  // --- per-table .xlsx export / import (upsert on the ID column) ---
+  ipcMain.handle('data:export', async (_e, kind: DataKind) => {
+    const res = await dialog.showSaveDialog({
+      title: `Export ${kind}`,
+      defaultPath: `DuckDuckWash ${kind}.xlsx`,
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }]
+    })
+    if (res.canceled || !res.filePath) return null
+    await writeFile(res.filePath, await buildEntityWorkbook(db, kind))
+    return res.filePath
+  })
+
+  ipcMain.handle('data:import', async (_e, kind: DataKind) => {
+    const res = await dialog.showOpenDialog({
+      title: `Import ${kind}`,
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }],
+      properties: ['openFile']
+    })
+    if (res.canceled || res.filePaths.length === 0) return null
+    return importEntityWorkbook(db, kind, await readFile(res.filePaths[0]))
   })
 
   ipcMain.handle('home:today', () => {

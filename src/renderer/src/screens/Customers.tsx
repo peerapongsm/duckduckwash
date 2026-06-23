@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import type { Customer } from '../../../shared/types'
+import DataIO from '../components/DataIO'
 
 const EMPTY = { name: '', location: '', contact: '', notes: '' }
 
@@ -45,9 +46,12 @@ export default function Customers(): JSX.Element {
 
   return (
     <div className="rise flex flex-col gap-4">
-      <button className="btn btn-primary btn-lg lift self-start rounded-box font-display shadow-soft" onClick={() => setForm(EMPTY)}>
-        ➕ Regular customer
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button className="btn btn-primary btn-lg lift rounded-box font-display shadow-soft" onClick={() => setForm(EMPTY)}>
+          ➕ Regular customer
+        </button>
+        <DataIO kind="customers" onImported={reload} />
+      </div>
 
       {customers.length === 0 && (
         <div className="rounded-box border-2 border-dashed border-base-300 p-10 text-center opacity-50">

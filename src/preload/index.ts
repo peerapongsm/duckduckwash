@@ -32,6 +32,11 @@ const api = {
     range: (from: string, to: string) => invoke('reports:range', from, to),
     export: (from: string, to: string): Promise<string | null> => invoke('reports:export', from, to) as Promise<string | null>
   },
+  data: {
+    export: (kind: string): Promise<string | null> => invoke('data:export', kind) as Promise<string | null>,
+    import: (kind: string): Promise<{ inserted: number; updated: number; skipped: number } | null> =>
+      invoke('data:import', kind) as Promise<{ inserted: number; updated: number; skipped: number } | null>
+  },
   home: { today: () => invoke('home:today') },
   backup: { run: () => invoke('backup:run'), openFolder: () => invoke('backup:openFolder') }
 }
