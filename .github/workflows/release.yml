@@ -1,0 +1,41 @@
+name: Release
+
+# Build the Windows installer and publish it to GitHub Releases so the app's
+# electron-updater feed picks it up. Triggered by pushing a version tag (vX.Y.Z),
+# or manually from the Actions tab.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write # needed for electron-builder to create the GitHub Release
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # rebuild:electron ensures better-sqlite3 is built for Electron's ABI
+      # (the v1.0.4 crash was a node-ABI binary shipped to an Electron runtime),
+      # then electron-builder builds the NSIS installer and publishes it +
+      # latest.yml to a non-draft GitHub Release (releaseType: release).
+      - name: Build & publish Windows installer
+        run: npm run release:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
