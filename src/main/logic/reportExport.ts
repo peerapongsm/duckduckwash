@@ -1,13 +1,7 @@
 import ExcelJS from 'exceljs'
 import type Database from 'better-sqlite3'
 import { rangeReport } from './reports'
-
-const SERVICE_LABELS: Record<string, string> = {
-  wash_dry_fold: 'Wash / Dry / Fold',
-  wash_dry_fold_iron: 'Wash / Dry / Fold / Iron',
-  iron: 'Iron',
-  dry_clean: 'Dry clean'
-}
+import { SERVICE_LABELS } from '../../shared/labels'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 

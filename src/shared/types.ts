@@ -101,6 +101,15 @@ export interface RangeReport {
   profit: number
   granularity: 'day' | 'month'
   buckets: { label: string; revenue: number }[]
+  revenueByService: BreakdownItem[]
+  expensesByCategory: BreakdownItem[]
+}
+
+// One slice of a revenue/expense breakdown (already label-resolved by the main
+// process), sorted by amount descending and limited to non-zero entries.
+export interface BreakdownItem {
+  label: string
+  amount: number
 }
 
 export interface Expense {

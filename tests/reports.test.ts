@@ -55,4 +55,38 @@ describe('rangeReport', () => {
     expect(() => rangeReport(db, '2026-06-30', '2026-06-01')).toThrow()
     expect(() => rangeReport(db, 'junk', '2026-06-01')).toThrow()
   })
+
+  it('breaks revenue down by service (+ surcharge) and expenses by category', () => {
+    const db = openDb(':memory:')
+    const svc = (k: string): number =>
+      (db.prepare('SELECT id FROM services WHERE key=?').get(k) as { id: number }).id
+
+    db.prepare("INSERT INTO orders (id, customer_name, created_at, total, surcharge_amount) VALUES (1,'a','2026-06-10 09:00:00',300,0)").run()
+    db.prepare("INSERT INTO orders (id, customer_name, created_at, total, surcharge_amount) VALUES (2,'b','2026-06-11 09:00:00',250,50)").run()
+    db.prepare("INSERT INTO orders (id, customer_name, created_at, total, surcharge_amount) VALUES (3,'c','2026-05-20 09:00:00',999,0)").run() // out of range
+    db.prepare('INSERT INTO order_items (order_id, service_id, total) VALUES (1, ?, 300)').run(svc('wash_dry_fold'))
+    db.prepare('INSERT INTO order_items (order_id, service_id, total) VALUES (2, ?, 200)').run(svc('iron'))
+    db.prepare('INSERT INTO order_items (order_id, service_id, total) VALUES (3, ?, 999)').run(svc('dry_clean'))
+
+    db.prepare("INSERT INTO expenses (date, category, amount) VALUES ('2026-06-10','supplies',100)").run()
+    db.prepare("INSERT INTO expenses (date, category, amount) VALUES ('2026-06-12','rent',400)").run()
+    db.prepare("INSERT INTO expenses (date, category, amount) VALUES ('2026-05-01','rent',777)").run() // out of range
+
+    const r = rangeReport(db, '2026-06-01', '2026-06-30')
+
+    // sorted by amount desc, out-of-range dry_clean excluded, surcharge its own line
+    expect(r.revenueByService).toEqual([
+      { label: 'Wash / Dry / Fold', amount: 300 },
+      { label: 'Iron', amount: 200 },
+      { label: 'Urgent surcharge', amount: 50 }
+    ])
+    // slices reconcile to the headline revenue figure
+    expect(r.revenueByService.reduce((s, i) => s + i.amount, 0)).toBe(r.revenue)
+
+    expect(r.expensesByCategory).toEqual([
+      { label: 'Rent', amount: 400 },
+      { label: 'Supplies', amount: 100 }
+    ])
+    expect(r.expensesByCategory.reduce((s, i) => s + i.amount, 0)).toBe(r.expenses)
+  })
 })

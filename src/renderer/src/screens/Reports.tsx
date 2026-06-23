@@ -1,6 +1,53 @@
 import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
-import type { RangeReport } from '../../../shared/types'
+import type { RangeReport, BreakdownItem } from '../../../shared/types'
+
+// A revenue/expense breakdown: each slice as a labelled row with its baht
+// amount, share of the total, and a proportional bar. Mirrors the way expenses
+// are categorised, applied to both revenue (by service) and expenses.
+function BreakdownPanel({
+  title,
+  icon,
+  items,
+  total,
+  barClass
+}: {
+  title: string
+  icon: string
+  items: BreakdownItem[]
+  total: number
+  barClass: string
+}): JSX.Element {
+  return (
+    <div className="rounded-box bg-base-100 p-5 shadow-soft">
+      <div className="mb-3 font-display text-lg font-semibold opacity-70">
+        {icon} {title}
+      </div>
+      {items.length === 0 ? (
+        <div className="py-4 text-center opacity-40">Nothing in this period</div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {items.map((it) => {
+            const pct = total > 0 ? Math.round((it.amount / total) * 100) : 0
+            return (
+              <div key={it.label}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-display font-medium">{it.label}</span>
+                  <span className="opacity-70">
+                    ฿ {it.amount.toLocaleString()} <span className="opacity-60">· {pct}%</span>
+                  </span>
+                </div>
+                <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-base-200">
+                  <div className={`h-full rounded-full ${barClass}`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function fmt(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -112,6 +159,25 @@ export default function Reports(): JSX.Element {
           </div>
         ))}
       </div>
+
+      {report && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <BreakdownPanel
+            title="Revenue by service"
+            icon="💰"
+            items={report.revenueByService}
+            total={report.revenue}
+            barClass="bg-success"
+          />
+          <BreakdownPanel
+            title="Expenses by category"
+            icon="🧾"
+            items={report.expensesByCategory}
+            total={report.expenses}
+            barClass="bg-error"
+          />
+        </div>
+      )}
 
       {report && report.buckets.length > 0 && (
         <div className="rounded-box bg-base-100 p-5 shadow-soft">
