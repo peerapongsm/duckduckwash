@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { JSX } from 'react'
 import type { Screen } from '../App'
 import type { Order, OrderGarment, Wearer } from '../../../shared/types'
+import { formatDateTime } from '../format'
 
 interface ItemRow {
   id: number
@@ -154,7 +155,7 @@ export default function OrderDetails({ orderId, go }: { orderId: number; go: (s:
       <div className="rounded-box bg-base-200/70 p-4">
         <div className="font-display text-2xl font-semibold">{order.customer_name}</div>
         <div className="mt-1 opacity-60">
-          {order.customer_location ? `${order.customer_location} · ` : ''}{order.created_at}
+          {order.customer_location ? `${order.customer_location} · ` : ''}{formatDateTime(order.created_at)}
         </div>
       </div>
 

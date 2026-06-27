@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import type { Expense } from '../../../shared/types'
 import DataIO from '../components/DataIO'
+import { formatDate } from '../format'
 
 const CATS = ['supplies', 'utilities', 'rent', 'food', 'salary', 'other'] as const
 const CAT_LABELS: Record<(typeof CATS)[number], string> = {
@@ -54,6 +55,8 @@ export default function Expenses(): JSX.Element {
   const [items, setItems] = useState<Expense[]>([])
   const [rows, setRows] = useState<RowInput[] | null>(null)
   const [date, setDate] = useState(localDate())
+  const [editing, setEditing] = useState<Expense | null>(null)
+  const [edit, setEdit] = useState<{ date: string; category: (typeof CATS)[number]; amount: string; note: string } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -83,6 +86,27 @@ export default function Expenses(): JSX.Element {
         rows.map((r) => ({ date, category: r.category, description: r.note || null, amount: Number(r.amount) }))
       )
       setRows(null)
+      reload()
+    } catch (err) {
+      alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setSaving(false)
+    }
+  }
+  function openEdit(x: Expense): void {
+    setEditing(x)
+    setEdit({ date: x.date, category: x.category, amount: String(x.amount), note: x.description ?? '' })
+  }
+  async function saveEdit(): Promise<void> {
+    if (!editing || !edit) return
+    setSaving(true)
+    try {
+      await window.api.expenses.update({
+        id: editing.id, date: edit.date, category: edit.category,
+        description: edit.note || null, amount: Number(edit.amount)
+      })
+      setEditing(null)
+      setEdit(null)
       reload()
     } catch (err) {
       alert('Something went wrong: ' + (err instanceof Error ? err.message : String(err)))
@@ -140,8 +164,9 @@ export default function Expenses(): JSX.Element {
             <div className="font-display text-xl font-semibold">
               {CAT_LABELS[x.category]} · <span className="text-error">฿ {x.amount.toLocaleString()}</span>
             </div>
-            <div className="opacity-60">{x.date} {x.description ? `· ${x.description}` : ''}</div>
+            <div className="opacity-60">{formatDate(x.date)} {x.description ? `· ${x.description}` : ''}</div>
           </div>
+          <button className="btn btn-ghost" onClick={() => openEdit(x)}>✏️</button>
           <button className="btn btn-ghost" onClick={() => setConfirmDelete(x.id)}>✕</button>
         </div>
       ))}
@@ -175,6 +200,32 @@ export default function Expenses(): JSX.Element {
               <button className="btn btn-primary btn-lg" disabled={!rowsValid || saving} onClick={save}>
                 Save{rows.length > 1 ? ` (${rows.length})` : ''}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {edit && (
+        <div className="modal modal-open">
+          <div className="modal-box flex max-w-2xl flex-col gap-3">
+            <h3 className="font-display text-xl font-semibold">Edit expense</h3>
+            <input type="date" className="input input-bordered input-lg" value={edit.date} min={bounds.min} max={bounds.max}
+              onChange={(e) => setEdit({ ...edit, date: e.target.value })} />
+            <div className="flex items-center gap-2">
+              <select className="select select-bordered select-lg" value={edit.category}
+                onChange={(e) => setEdit({ ...edit, category: e.target.value as (typeof CATS)[number] })}>
+                {CATS.map((c) => (
+                  <option key={c} value={c}>{CAT_LABELS[c]}</option>
+                ))}
+              </select>
+              <input type="number" min="0" className="input input-bordered input-lg w-32 text-right" placeholder="Amount"
+                value={edit.amount} onChange={(e) => setEdit({ ...edit, amount: e.target.value })} />
+              <input className="input input-bordered input-lg flex-1" placeholder="Note (optional)"
+                value={edit.note} onChange={(e) => setEdit({ ...edit, note: e.target.value })} />
+            </div>
+            <div className="modal-action">
+              <button className="btn btn-lg" onClick={() => { setEditing(null); setEdit(null) }}>Cancel</button>
+              <button className="btn btn-primary btn-lg" disabled={!(Number(edit.amount) > 0) || saving} onClick={saveEdit}>Save</button>
             </div>
           </div>
         </div>

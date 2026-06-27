@@ -20,6 +20,7 @@ const api = {
   expenses: {
     createMany: (xs: unknown[]) => invoke('expenses:createMany', xs),
     list: (monthPrefix: string) => invoke('expenses:list', monthPrefix),
+    update: (x: unknown) => invoke('expenses:update', x),
     remove: (id: number) => invoke('expenses:delete', id)
   },
   garments: { types: () => invoke('garments:types') },

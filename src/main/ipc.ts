@@ -137,6 +137,12 @@ export function registerIpc(db: Database.Database, backupDir: string): void {
   ipcMain.handle('expenses:list', (_e, monthPrefix: string) =>
     db.prepare("SELECT * FROM expenses WHERE date LIKE ? || '%' ORDER BY date DESC").all(monthPrefix))
 
+  ipcMain.handle('expenses:update', (_e, x: { id: number; date: string; category: string; description: string | null; amount: number }) => {
+    if (x.amount <= 0) throw new Error('amount must be positive')
+    return db.prepare('UPDATE expenses SET date=?, category=?, description=?, amount=? WHERE id=?')
+      .run(x.date, x.category, x.description, x.amount, x.id).changes
+  })
+
   ipcMain.handle('expenses:delete', (_e, id: number) =>
     db.prepare('DELETE FROM expenses WHERE id=?').run(id).changes)
 

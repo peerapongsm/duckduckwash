@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
 import type { Screen } from '../App'
 import type { Customer, Service } from '../../../shared/types'
+import { formatDate } from '../format'
 
 type Suggestion = Customer & { last_order: string | null }
 
@@ -89,7 +90,7 @@ export default function NewOrder({ go }: { go: (s: Screen) => void }): JSX.Eleme
               <li key={c.id}>
                 <button onClick={() => pick(c)}>
                   <b>{c.name}</b> {c.location ?? ''} {c.contact ?? ''}{' '}
-                  {c.last_order ? `· last ${c.last_order.slice(0, 10)}` : ''}
+                  {c.last_order ? `· last ${formatDate(c.last_order)}` : ''}
                 </button>
               </li>
             ))}

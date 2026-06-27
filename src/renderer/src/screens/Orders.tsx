@@ -3,6 +3,7 @@ import type { JSX } from 'react'
 import type { Screen } from '../App'
 import type { Order, OrderStatus } from '../../../shared/types'
 import DataIO from '../components/DataIO'
+import { formatDateTime } from '../format'
 
 const TABS: { key: OrderStatus; label: string; icon: string }[] = [
   { key: 'waiting_input', label: 'Waiting input', icon: '📝' },
@@ -140,7 +141,7 @@ export default function Orders({ go }: { go: (s: Screen) => void }): JSX.Element
               {o.is_delivery ? <span className="ml-2 badge badge-secondary badge-lg align-middle">🛵 delivery</span> : null}
             </div>
             <div className="mt-1 opacity-60">
-              {o.created_at} · {o.total > 0 ? <b className="text-base-content">฿ {o.total.toLocaleString()}</b> : '—'}
+              {formatDateTime(o.created_at)} · {o.total > 0 ? <b className="text-base-content">฿ {o.total.toLocaleString()}</b> : '—'}
             </div>
           </div>
           {o.status === 'waiting_input' && (

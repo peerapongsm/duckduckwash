@@ -8,6 +8,11 @@ import { openDb } from './db'
 import { registerIpc } from './ipc'
 import { backupDb } from './backup'
 
+// Force Chromium UI locale to en-GB so native <input type="date"> pickers render
+// as DD/MM/YYYY (Gregorian, English months) regardless of OS locale — Electron
+// otherwise defaults to en-US (MM/DD/YYYY). Must run before app is ready.
+app.commandLine.appendSwitch('lang', 'en-GB')
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
